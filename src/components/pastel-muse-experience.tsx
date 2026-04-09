@@ -29,9 +29,9 @@ type ExperienceProps = {
 type ExperienceMode = "landing" | "signup" | TopicKey;
 type HashMode = TopicKey | "register";
 
-const MARQUEE_GROUP_COUNT = 12;
-const MARQUEE_LEAD_GROUPS = 5;
-const MARQUEE_MAX_INTERACTION_VELOCITY = 3400;
+const MARQUEE_GROUP_COUNT = 3;
+const MARQUEE_LEAD_GROUPS = 1;
+const MARQUEE_MAX_INTERACTION_VELOCITY = 5200;
 const MARQUEE_INTERACTION_RESPONSE = 14.5;
 const MARQUEE_INTERACTION_DAMPING = 7.8;
 const MARQUEE_WHEEL_VELOCITY_GAIN = 10.25;
@@ -48,7 +48,7 @@ export function PastelMuseExperience({
   const marqueeViewportRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
-  /** Buffered translate position inside the repeated strip set. */
+  /** Phase inside one group width; we always render against the centered copy. */
   const marqueePhaseRef = useRef(0);
   const speedRef = useRef(26);
   const baseSpeedRef = useRef(26);
@@ -411,9 +411,9 @@ export function PastelMuseExperience({
       const boundedElapsedMs = Math.max(4, Math.min(elapsedMs, 180));
       const gestureSpeed = Math.abs(deltaY) / boundedElapsedMs;
       const speedBoost =
-        1 + Math.min(8.5, Math.pow(Math.max(0, gestureSpeed - 0.9), 1.08) * 1.15);
+        1 + Math.min(12, Math.pow(Math.max(0, gestureSpeed - 0.82), 1.1) * 1.22);
       const distanceBoost =
-        1 + Math.min(1.8, Math.pow(Math.abs(deltaY) / 140, 0.82) * 0.45);
+        1 + Math.min(2.2, Math.pow(Math.abs(deltaY) / 140, 0.84) * 0.52);
       const impulse = -deltaY * gain * speedBoost * distanceBoost;
 
       interactionTargetVelocityRef.current = clampInteractionVelocity(
@@ -428,33 +428,13 @@ export function PastelMuseExperience({
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let previousTime = performance.now();
     let groupWidth = 0;
-    let viewportWidth = 0;
-    let trackWidth = 0;
-    const recenterBufferedTrack = () => {
-      if (groupWidth === 0 || viewportWidth === 0 || trackWidth === 0) {
-        return;
-      }
-
-      const bufferGroups = Math.max(
-        2,
-        Math.min(MARQUEE_LEAD_GROUPS - 1, Math.ceil(viewportWidth / groupWidth) + 1),
-      );
-      const minTranslate = bufferGroups * groupWidth;
-      const maxTranslate = Math.max(minTranslate, trackWidth - viewportWidth - minTranslate);
-
-      while (marqueePhaseRef.current < minTranslate) {
-        marqueePhaseRef.current += groupWidth;
-      }
-      while (marqueePhaseRef.current > maxTranslate) {
-        marqueePhaseRef.current -= groupWidth;
-      }
-    };
     const applyTransform = () => {
-      if (groupWidth === 0 || trackWidth === 0) {
+      if (groupWidth === 0) {
         return;
       }
 
-      track.style.transform = `translate3d(${-marqueePhaseRef.current}px, 0, 0)`;
+      const leadWidth = MARQUEE_LEAD_GROUPS * groupWidth;
+      track.style.transform = `translate3d(${-(leadWidth + marqueePhaseRef.current)}px, 0, 0)`;
     };
 
     const measure = () => {
@@ -472,11 +452,7 @@ export function PastelMuseExperience({
         return;
       }
 
-      viewportWidth = viewport.getBoundingClientRect().width;
-      trackWidth = track.scrollWidth || groupWidth * MARQUEE_GROUP_COUNT;
-      const localPhase = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
-      marqueePhaseRef.current = MARQUEE_LEAD_GROUPS * groupWidth + localPhase;
-      recenterBufferedTrack();
+      marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
       applyTransform();
     };
 
@@ -506,7 +482,7 @@ export function PastelMuseExperience({
 
       if (groupWidth > 0 && speedRef.current !== 0) {
         marqueePhaseRef.current += speedRef.current * delta;
-        recenterBufferedTrack();
+        marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
       }
 
       applyTransform();
