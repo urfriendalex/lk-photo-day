@@ -31,6 +31,10 @@ type HashMode = TopicKey | "register";
 
 const MARQUEE_GROUP_COUNT = 10;
 const MARQUEE_LEAD_GROUPS = 4;
+const MARQUEE_MAX_INTERACTION_VELOCITY = 280;
+const MARQUEE_INTERACTION_DECAY = 4.5;
+const MARQUEE_WHEEL_VELOCITY_GAIN = 0.9;
+const MARQUEE_TOUCH_VELOCITY_GAIN = 1.35;
 
 export function PastelMuseExperience({
   content,
@@ -48,6 +52,7 @@ export function PastelMuseExperience({
   const speedRef = useRef(26);
   const baseSpeedRef = useRef(26);
   const targetSpeedRef = useRef(26);
+  const interactionVelocityRef = useRef(0);
   const isMarqueePausedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
   const frameRef = useRef<number | null>(null);
@@ -225,6 +230,16 @@ export function PastelMuseExperience({
     setIsLandingInfoOpen((current) => !current);
   }, []);
 
+  const syncMarqueeTargetSpeed = useCallback(() => {
+    if (prefersReducedMotionRef.current) {
+      targetSpeedRef.current = 0;
+      return;
+    }
+
+    const ambientVelocity = isMarqueePausedRef.current ? 0 : baseSpeedRef.current;
+    targetSpeedRef.current = ambientVelocity + interactionVelocityRef.current;
+  }, []);
+
   useEffect(() => {
     if (introState !== "reveal") {
       return;
@@ -358,9 +373,42 @@ export function PastelMuseExperience({
       return;
     }
 
-    const updateTargetSpeed = () => {
-      targetSpeedRef.current =
-        prefersReducedMotionRef.current || isMarqueePausedRef.current ? 0 : baseSpeedRef.current;
+    const normalizeMarqueePhase = (phase: number, width: number) => {
+      if (width === 0) {
+        return 0;
+      }
+
+      return ((phase % width) + width) % width;
+    };
+
+    const clampInteractionVelocity = (velocity: number) => {
+      return Math.max(
+        -MARQUEE_MAX_INTERACTION_VELOCITY,
+        Math.min(MARQUEE_MAX_INTERACTION_VELOCITY, velocity),
+      );
+    };
+
+    const normalizeWheelDelta = (event: WheelEvent) => {
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        return event.deltaY * 16;
+      }
+
+      if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        return event.deltaY * window.innerHeight;
+      }
+
+      return event.deltaY;
+    };
+
+    const applyInteractionVelocity = (deltaY: number, gain: number) => {
+      if (!Number.isFinite(deltaY) || deltaY === 0 || prefersReducedMotionRef.current) {
+        return;
+      }
+
+      interactionVelocityRef.current = clampInteractionVelocity(
+        interactionVelocityRef.current + -deltaY * gain,
+      );
+      syncMarqueeTargetSpeed();
     };
 
     const rootStyles = getComputedStyle(document.documentElement);
@@ -393,7 +441,7 @@ export function PastelMuseExperience({
         return;
       }
 
-      marqueePhaseRef.current %= groupWidth;
+      marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
       applyTransform();
     };
 
@@ -401,18 +449,21 @@ export function PastelMuseExperience({
       const delta = Math.min((time - previousTime) / 1000, 0.05);
       previousTime = time;
 
+      // Let scroll and swipe impulses decay smoothly back into the ambient marquee drift.
+      interactionVelocityRef.current *= Math.exp(-MARQUEE_INTERACTION_DECAY * delta);
+      if (Math.abs(interactionVelocityRef.current) < 0.01) {
+        interactionVelocityRef.current = 0;
+      }
+      syncMarqueeTargetSpeed();
       speedRef.current += (targetSpeedRef.current - speedRef.current) * easing;
 
       if (Math.abs(speedRef.current) < 0.01 && targetSpeedRef.current === 0) {
         speedRef.current = 0;
       }
 
-      if (groupWidth > 0 && speedRef.current > 0) {
+      if (groupWidth > 0 && speedRef.current !== 0) {
         marqueePhaseRef.current += speedRef.current * delta;
-
-        while (marqueePhaseRef.current >= groupWidth) {
-          marqueePhaseRef.current -= groupWidth;
-        }
+        marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
       }
 
       applyTransform();
@@ -421,9 +472,10 @@ export function PastelMuseExperience({
 
     const syncMotionPreference = () => {
       prefersReducedMotionRef.current = reduceMotion.matches;
-      updateTargetSpeed();
+      syncMarqueeTargetSpeed();
 
       if (prefersReducedMotionRef.current) {
+        interactionVelocityRef.current = 0;
         speedRef.current = 0;
         applyTransform();
       } else if (speedRef.current === 0 && !isMarqueePausedRef.current) {
@@ -432,8 +484,9 @@ export function PastelMuseExperience({
     };
 
     prefersReducedMotionRef.current = reduceMotion.matches;
+    interactionVelocityRef.current = 0;
     speedRef.current = prefersReducedMotionRef.current ? 0 : baseSpeedRef.current;
-    updateTargetSpeed();
+    syncMarqueeTargetSpeed();
 
     measure();
     frameRef.current = window.requestAnimationFrame(step);
@@ -453,6 +506,60 @@ export function PastelMuseExperience({
       image.addEventListener("error", measure);
     });
 
+    let touchY: number | null = null;
+    const nonPassiveListenerOptions = { passive: false } as const;
+    const handleWheel = (event: WheelEvent) => {
+      if (event.ctrlKey) {
+        return;
+      }
+
+      const deltaY = normalizeWheelDelta(event);
+      if (deltaY === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      applyInteractionVelocity(deltaY, MARQUEE_WHEEL_VELOCITY_GAIN);
+    };
+    const handleTouchStart = (event: TouchEvent) => {
+      touchY = event.touches.length === 1 ? event.touches[0]?.clientY ?? null : null;
+    };
+    const handleTouchMove = (event: TouchEvent) => {
+      if (event.touches.length !== 1) {
+        touchY = null;
+        return;
+      }
+
+      const nextTouchY = event.touches[0]?.clientY ?? null;
+      if (nextTouchY === null) {
+        touchY = null;
+        return;
+      }
+
+      if (touchY === null) {
+        touchY = nextTouchY;
+        return;
+      }
+
+      const deltaY = nextTouchY - touchY;
+      touchY = nextTouchY;
+      if (deltaY === 0) {
+        return;
+      }
+
+      event.preventDefault();
+      applyInteractionVelocity(deltaY, MARQUEE_TOUCH_VELOCITY_GAIN);
+    };
+    const clearTouchGesture = () => {
+      touchY = null;
+    };
+
+    window.addEventListener("wheel", handleWheel, nonPassiveListenerOptions);
+    window.addEventListener("touchstart", handleTouchStart, nonPassiveListenerOptions);
+    window.addEventListener("touchmove", handleTouchMove, nonPassiveListenerOptions);
+    window.addEventListener("touchend", clearTouchGesture, nonPassiveListenerOptions);
+    window.addEventListener("touchcancel", clearTouchGesture, nonPassiveListenerOptions);
+
     return () => {
       if (frameRef.current !== null) {
         window.cancelAnimationFrame(frameRef.current);
@@ -465,8 +572,15 @@ export function PastelMuseExperience({
         image.removeEventListener("load", measure);
         image.removeEventListener("error", measure);
       });
+      window.removeEventListener("wheel", handleWheel, nonPassiveListenerOptions);
+      window.removeEventListener("touchstart", handleTouchStart, nonPassiveListenerOptions);
+      window.removeEventListener("touchmove", handleTouchMove, nonPassiveListenerOptions);
+      window.removeEventListener("touchend", clearTouchGesture, nonPassiveListenerOptions);
+      window.removeEventListener("touchcancel", clearTouchGesture, nonPassiveListenerOptions);
+      interactionVelocityRef.current = 0;
+      syncMarqueeTargetSpeed();
     };
-  }, [activeMode, marqueeTrack.length]);
+  }, [activeMode, marqueeTrack.length, syncMarqueeTargetSpeed]);
 
   const onLanding = activeMode === "landing";
   const showTitleIntro = onLanding && introState === "intro";
@@ -681,19 +795,19 @@ export function PastelMuseExperience({
                   aria-hidden="true"
                   onMouseEnter={() => {
                     isMarqueePausedRef.current = true;
-                    targetSpeedRef.current = 0;
+                    syncMarqueeTargetSpeed();
                   }}
                   onMouseLeave={() => {
                     isMarqueePausedRef.current = false;
-                    targetSpeedRef.current = prefersReducedMotionRef.current ? 0 : baseSpeedRef.current;
+                    syncMarqueeTargetSpeed();
                   }}
                   onFocusCapture={() => {
                     isMarqueePausedRef.current = true;
-                    targetSpeedRef.current = 0;
+                    syncMarqueeTargetSpeed();
                   }}
                   onBlurCapture={() => {
                     isMarqueePausedRef.current = false;
-                    targetSpeedRef.current = prefersReducedMotionRef.current ? 0 : baseSpeedRef.current;
+                    syncMarqueeTargetSpeed();
                   }}
                 >
                   <div ref={marqueeTrackRef} className="marquee__track">
