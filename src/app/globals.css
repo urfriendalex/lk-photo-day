@@ -4,12 +4,13 @@
 
 html {
   scroll-behavior: smooth;
-  overflow-x: clip;
 }
 
 body {
   margin: 0;
   min-width: 320px;
+  /* Horizontal clip on body avoids overflow-x on html pairing with overflow-y in a way that breaks `position: sticky` against the viewport in some engines. */
+  overflow-x: clip;
   background: var(--color-bg);
   color: var(--color-ink);
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
@@ -249,11 +250,12 @@ input {
 }
 
 .experience__header {
-  display: grid;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
   gap: 0.85rem;
   width: 100%;
   min-width: 0;
-  justify-items: stretch;
   position: relative;
   z-index: 2;
 }
@@ -377,6 +379,12 @@ input {
   min-height: clamp(4rem, 18vw, 9rem);
 }
 
+.experience__nav-row-placeholder {
+  flex-shrink: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
 .experience__nav-row {
   display: flex;
   align-items: center;
@@ -384,13 +392,23 @@ input {
   gap: 1rem;
   width: 100%;
   min-width: 0;
-  /* Grid default stretch can prevent sticky from behaving; pin height to content */
-  align-self: start;
-  position: sticky;
-  top: env(safe-area-inset-top, 0);
+  position: relative;
   z-index: 30;
   background: var(--color-bg);
   padding-block: 0.35rem;
+}
+
+.experience__nav-row--docked {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  z-index: 50;
+  box-sizing: border-box;
+  padding-inline: var(--page-pad-x);
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.35rem);
+  padding-bottom: 0.35rem;
+  background: var(--color-bg);
 }
 
 .experience__nav {

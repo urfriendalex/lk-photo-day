@@ -473,6 +473,74 @@ export function PastelMuseExperience({
   const showTitleIntro = onLanding && introState === "intro";
   const showPreloaderShell = onLanding && introState !== "idle";
 
+  const navRowRef = useRef<HTMLDivElement | null>(null);
+  const navDockedRef = useRef(false);
+  const pinScrollYRef = useRef(0);
+  const [navDocked, setNavDocked] = useState(false);
+  const [navRowPadHeight, setNavRowPadHeight] = useState(0);
+
+  const syncNavDock = useCallback(() => {
+    const el = navRowRef.current;
+    if (!el) {
+      return;
+    }
+
+    if (!navDockedRef.current) {
+      pinScrollYRef.current = el.getBoundingClientRect().top + window.scrollY;
+    }
+
+    const shouldDock = window.scrollY >= pinScrollYRef.current - 1;
+    if (shouldDock !== navDockedRef.current) {
+      navDockedRef.current = shouldDock;
+      setNavDocked(shouldDock);
+    }
+  }, []);
+
+  useLayoutEffect(() => {
+    navDockedRef.current = false;
+    setNavDocked(false);
+
+    const el = navRowRef.current;
+    if (!el) {
+      return;
+    }
+
+    pinScrollYRef.current = el.getBoundingClientRect().top + window.scrollY;
+    setNavRowPadHeight(el.offsetHeight);
+
+    const shouldDock = window.scrollY >= pinScrollYRef.current - 1;
+    navDockedRef.current = shouldDock;
+    setNavDocked(shouldDock);
+  }, [activeMode, introState, showPreloaderShell]);
+
+  useLayoutEffect(() => {
+    const el = navRowRef.current;
+    if (!el) {
+      return;
+    }
+
+    const ro = new ResizeObserver(() => {
+      setNavRowPadHeight(el.offsetHeight);
+      if (!navDockedRef.current) {
+        pinScrollYRef.current = el.getBoundingClientRect().top + window.scrollY;
+      }
+      syncNavDock();
+    });
+
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [syncNavDock]);
+
+  useEffect(() => {
+    const opts: AddEventListenerOptions = { passive: true };
+    window.addEventListener("scroll", syncNavDock, opts);
+    window.addEventListener("resize", syncNavDock);
+    return () => {
+      window.removeEventListener("scroll", syncNavDock, opts);
+      window.removeEventListener("resize", syncNavDock);
+    };
+  }, [syncNavDock]);
+
   return (
     <>
       <main
@@ -494,7 +562,17 @@ export function PastelMuseExperience({
               onPreloaderComplete={handlePreloaderSnapComplete}
               onClick={handleLandingTitleClick}
             />
-            <div className="experience__nav-row">
+            {navDocked ? (
+              <div
+                className="experience__nav-row-placeholder"
+                style={{ height: navRowPadHeight }}
+                aria-hidden
+              />
+            ) : null}
+            <div
+              ref={navRowRef}
+              className={`experience__nav-row${navDocked ? " experience__nav-row--docked" : ""}`}
+            >
               <nav className="experience__nav" aria-label="Topic navigation">
                 {content.topics.map((topic) => {
                   const selected = activeTopic === topic.key;
