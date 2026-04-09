@@ -29,8 +29,8 @@ type ExperienceProps = {
 type ExperienceMode = "landing" | "signup" | TopicKey;
 type HashMode = TopicKey | "register";
 
-const MARQUEE_GROUP_COUNT = 3;
-const MARQUEE_LEAD_GROUPS = 1;
+const MARQUEE_GROUP_COUNT = 7;
+const MARQUEE_CENTER_GROUP_INDEX = Math.floor(MARQUEE_GROUP_COUNT / 2);
 const MARQUEE_MAX_INTERACTION_VELOCITY = 5200;
 const MARQUEE_INTERACTION_RESPONSE = 14.5;
 const MARQUEE_INTERACTION_DAMPING = 7.8;
@@ -48,7 +48,7 @@ export function PastelMuseExperience({
   const marqueeViewportRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
-  /** Phase inside one group width; we always render against the centered copy. */
+  /** Phase inside one group width; repeated groups are positioned around the centered copy. */
   const marqueePhaseRef = useRef(0);
   const speedRef = useRef(26);
   const baseSpeedRef = useRef(26);
@@ -428,22 +428,25 @@ export function PastelMuseExperience({
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let previousTime = performance.now();
     let groupWidth = 0;
+    track.style.transform = "";
+
     const applyTransform = () => {
       if (groupWidth === 0) {
         return;
       }
 
-      const leadWidth = MARQUEE_LEAD_GROUPS * groupWidth;
-      track.style.transform = `translate3d(${-(leadWidth + marqueePhaseRef.current)}px, 0, 0)`;
+      groups.forEach((groupEl, index) => {
+        const x = (index - MARQUEE_CENTER_GROUP_INDEX) * groupWidth - marqueePhaseRef.current;
+        groupEl.style.transform = `translate3d(${x}px, 0, 0)`;
+      });
     };
 
+    const groups = Array.from(track.querySelectorAll<HTMLElement>(".marquee__group"));
+
     const measure = () => {
-      const trackEl = marqueeTrackRef.current;
-      const groups = trackEl?.querySelectorAll<HTMLElement>(".marquee__group");
-      if (groups && groups.length >= 2) {
-        const a = groups[0].getBoundingClientRect().left;
-        const b = groups[1].getBoundingClientRect().left;
-        groupWidth = b - a;
+      const measuredGroup = marqueeGroupRef.current;
+      if (measuredGroup) {
+        groupWidth = measuredGroup.getBoundingClientRect().width;
       } else {
         groupWidth = group.scrollWidth;
       }
@@ -452,6 +455,7 @@ export function PastelMuseExperience({
         return;
       }
 
+      track.style.height = `${group.getBoundingClientRect().height}px`;
       marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
       applyTransform();
     };
@@ -613,6 +617,10 @@ export function PastelMuseExperience({
         image.removeEventListener("load", measure);
         image.removeEventListener("error", measure);
       });
+      groups.forEach((groupEl) => {
+        groupEl.style.transform = "";
+      });
+      track.style.height = "";
       window.removeEventListener("wheel", handleWheel, nonPassiveListenerOptions);
       window.removeEventListener("touchstart", handleTouchStart, nonPassiveListenerOptions);
       window.removeEventListener("touchmove", handleTouchMove, nonPassiveListenerOptions);
