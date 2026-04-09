@@ -3,7 +3,7 @@
 import { gsap } from "gsap";
 import { type ReactNode, type RefObject, useLayoutEffect, useRef } from "react";
 
-import { usePretextLines } from "@/hooks/use-pretext-lines";
+import { useVisualLines } from "@/hooks/use-visual-lines";
 import {
   DURATION_TRANSFORM_S,
   EASE_TRANSFORM,
@@ -75,7 +75,7 @@ export function TextReveal({
 }: TextRevealProps) {
   const ref = useRef<HTMLElement | null>(null);
   const hasAnimatedRef = useRef(false);
-  const lines = usePretextLines(text, ref as RefObject<HTMLElement | null>);
+  const lines = useVisualLines(text, ref as RefObject<HTMLElement | null>);
 
   useLayoutEffect(() => {
     const root = ref.current;

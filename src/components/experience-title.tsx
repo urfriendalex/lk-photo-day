@@ -85,7 +85,10 @@ function ExperienceTitleComponent({
     if (!bleed || !button || !track) {
       return;
     }
-    const target = bleed.clientWidth;
+    const styles = window.getComputedStyle(button);
+    const paddingX =
+      Number.parseFloat(styles.paddingLeft) + Number.parseFloat(styles.paddingRight);
+    const target = bleed.clientWidth - paddingX;
     if (target < 32) {
       return;
     }

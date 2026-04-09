@@ -71,7 +71,7 @@ export function PastelMuseExperience({
   }, [content.location, content.date]);
 
   const landingFooterReveal = useMemo(() => {
-    /** One block so Pretext wraps the full intro like normal prose (same string as the mobile info panel). */
+    /** One block so line breaks follow normal HTML flow (same joined string as the mobile info panel). */
     const introParagraph = content.introText.join(" ");
     const intro = [
       { paragraph: introParagraph, blockDelay: revealAfterLines(0) },
@@ -88,12 +88,11 @@ export function PastelMuseExperience({
   }, [content.introText, content.registerLabel, content.infoLines]);
 
   const signupViewReveal = useMemo(() => {
-    let c = 0;
-    const intro = content.signup.intro.map((paragraph) => {
-      const blockDelay = revealAfterLines(c);
-      c += estimateLineCount(paragraph);
-      return { paragraph, blockDelay };
-    });
+    const introParagraph = content.signup.intro.join(" ");
+    const intro = [
+      { paragraph: introParagraph, blockDelay: revealAfterLines(0) },
+    ];
+    let c = estimateLineCount(introParagraph);
     const titleDelay = revealAfterLines(c);
     c += estimateLineCount(content.signup.title);
     const formBaseLines = c;

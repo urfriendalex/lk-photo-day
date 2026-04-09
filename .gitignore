@@ -1,13 +1,45 @@
-.next
+# dependencies
 node_modules
-.env
-.env.local
-.env.*.local
+.pnp
+.pnp.js
+
+# next.js
+.next
 out
+
+# production
 dist
-coverage
+build
+
+# env (secrets — never commit)
+.env
+.env*.local
+
+# debug / logs
 npm-debug.log*
-pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-DS_Store
+pnpm-debug.log*
+*.log
+
+# testing
+coverage
+
+# typescript (incremental / composite)
+*.tsbuildinfo
+
+# eslint
+.eslintcache
+
+# vercel
+.vercel
+
+# turbo (monorepo tooling)
+.turbo
+
+# os
+.DS_Store
+Thumbs.db
+
+# certs / keys
+*.pem

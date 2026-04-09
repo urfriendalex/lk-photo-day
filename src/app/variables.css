@@ -20,6 +20,10 @@
   --duration-panel-exit: 180ms;
   --landing-info-frost-bg: rgba(255, 255, 255, 0.24);
   --landing-info-frost-blur: 12px;
+  --landing-info-panel-pad: 1.25rem;
+  --landing-info-panel-toggle-reserve: 3.25rem;
+  --landing-info-toggle-offset-x: 10px;
+  --landing-info-toggle-offset-y: 14px;
 
   /* Drawn underline: `.text-link--drawn` + nav `.link-underline` (see globals.css) */
   --color-text-link: var(--color-ink);

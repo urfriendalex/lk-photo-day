@@ -2,7 +2,7 @@
 
 import { useRef } from "react";
 
-import { usePretextLines } from "@/hooks/use-pretext-lines";
+import { useVisualLines } from "@/hooks/use-visual-lines";
 
 type PretextParagraphProps = {
   text: string;
@@ -10,7 +10,7 @@ type PretextParagraphProps = {
 
 export function PretextParagraph({ text }: PretextParagraphProps) {
   const ref = useRef<HTMLParagraphElement>(null);
-  const lines = usePretextLines(text, ref);
+  const lines = useVisualLines(text, ref);
 
   return (
     <p ref={ref}>
