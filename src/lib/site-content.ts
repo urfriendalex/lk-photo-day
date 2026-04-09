@@ -40,9 +40,9 @@ export type SiteContent = {
 
 export const siteContent: SiteContent = {
   seo: {
-    title: "pastel muse",
+    title: "PASTEL MUSE",
     description:
-      "Pastel Muse photo day in Warsaw with styling, photography, and makeup in a soft editorial direction.",
+      "PASTEL MUSE is a one-day photo experience in Warsaw with styling, makeup, and editorial photography for a soft, cohesive visual story built for personal branding and social media.",
   },
   projectTitle: "PASTEL MUSE",
   location: "WARSAW",

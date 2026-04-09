@@ -17,6 +17,17 @@ const bodyFont = Inter({
 export const metadata: Metadata = {
   title: siteContent.seo.title,
   description: siteContent.seo.description,
+  applicationName: siteContent.seo.title,
+  keywords: [
+    "PASTEL MUSE",
+    "photo day Warsaw",
+    "editorial photoshoot",
+    "personal branding photoshoot",
+    "makeup and styling Warsaw",
+    "women's photo session",
+    "creative photoshoot Warsaw",
+    "soft editorial photography",
+  ],
   manifest: "/site.webmanifest",
   icons: {
     icon: [
@@ -27,6 +38,19 @@ export const metadata: Metadata = {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
     shortcut: ["/favicon.ico"],
   },
+  openGraph: {
+    title: siteContent.seo.title,
+    description: siteContent.seo.description,
+    type: "website",
+    locale: "en_US",
+    siteName: siteContent.seo.title,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteContent.seo.title,
+    description: siteContent.seo.description,
+  },
+  category: "photography",
 };
 
 export default function RootLayout({
