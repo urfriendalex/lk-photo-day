@@ -48,7 +48,7 @@ export function PastelMuseExperience({
   const marqueeViewportRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
-  /** Phase inside one group width; repeated groups are positioned around the centered copy. */
+  /** Phase inside one group stride (group width + inter-group gap). */
   const marqueePhaseRef = useRef(0);
   const speedRef = useRef(26);
   const baseSpeedRef = useRef(26);
@@ -376,12 +376,12 @@ export function PastelMuseExperience({
       return;
     }
 
-    const normalizeMarqueePhase = (phase: number, width: number) => {
-      if (width === 0) {
+    const normalizeMarqueePhase = (phase: number, stride: number) => {
+      if (stride === 0) {
         return 0;
       }
 
-      return ((phase % width) + width) % width;
+      return ((phase % stride) + stride) % stride;
     };
 
     const clampInteractionVelocity = (velocity: number) => {
@@ -428,15 +428,17 @@ export function PastelMuseExperience({
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
     let previousTime = performance.now();
     let groupWidth = 0;
+    let groupGap = 0;
     track.style.transform = "";
 
     const applyTransform = () => {
-      if (groupWidth === 0) {
+      const groupStride = groupWidth + groupGap;
+      if (groupStride === 0) {
         return;
       }
 
       groups.forEach((groupEl, index) => {
-        const x = (index - MARQUEE_CENTER_GROUP_INDEX) * groupWidth - marqueePhaseRef.current;
+        const x = (index - MARQUEE_CENTER_GROUP_INDEX) * groupStride - marqueePhaseRef.current;
         groupEl.style.transform = `translate3d(${x}px, 0, 0)`;
       });
     };
@@ -447,16 +449,23 @@ export function PastelMuseExperience({
       const measuredGroup = marqueeGroupRef.current;
       if (measuredGroup) {
         groupWidth = measuredGroup.getBoundingClientRect().width;
+        const groupStyles = getComputedStyle(measuredGroup);
+        groupGap =
+          Number.parseFloat(groupStyles.columnGap || groupStyles.gap || "0") ||
+          Number.parseFloat(groupStyles.gap || "0") ||
+          0;
       } else {
         groupWidth = group.scrollWidth;
+        groupGap = 0;
       }
 
-      if (groupWidth === 0) {
+      const groupStride = groupWidth + groupGap;
+      if (groupStride === 0) {
         return;
       }
 
       track.style.height = `${group.getBoundingClientRect().height}px`;
-      marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
+      marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupStride);
       applyTransform();
     };
 
@@ -484,9 +493,10 @@ export function PastelMuseExperience({
         speedRef.current = 0;
       }
 
-      if (groupWidth > 0 && speedRef.current !== 0) {
+      const groupStride = groupWidth + groupGap;
+      if (groupStride > 0 && speedRef.current !== 0) {
         marqueePhaseRef.current += speedRef.current * delta;
-        marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupWidth);
+        marqueePhaseRef.current = normalizeMarqueePhase(marqueePhaseRef.current, groupStride);
       }
 
       applyTransform();
