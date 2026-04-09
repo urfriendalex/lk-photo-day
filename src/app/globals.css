@@ -621,7 +621,6 @@ input {
   display: flex;
   justify-content: center;
   align-items: flex-end;
-  width: 100%;
   min-width: 0;
 }
 
