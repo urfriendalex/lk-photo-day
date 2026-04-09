@@ -31,11 +31,11 @@ type HashMode = TopicKey | "register";
 
 const MARQUEE_GROUP_COUNT = 10;
 const MARQUEE_LEAD_GROUPS = 4;
-const MARQUEE_MAX_INTERACTION_VELOCITY = 520;
-const MARQUEE_INTERACTION_RESPONSE = 13;
-const MARQUEE_INTERACTION_DAMPING = 8.5;
-const MARQUEE_WHEEL_VELOCITY_GAIN = 1.85;
-const MARQUEE_TOUCH_VELOCITY_GAIN = 2.35;
+const MARQUEE_MAX_INTERACTION_VELOCITY = 1800;
+const MARQUEE_INTERACTION_RESPONSE = 14.5;
+const MARQUEE_INTERACTION_DAMPING = 7.8;
+const MARQUEE_WHEEL_VELOCITY_GAIN = 9.5;
+const MARQUEE_TOUCH_VELOCITY_GAIN = 11.75;
 
 export function PastelMuseExperience({
   content,
@@ -403,13 +403,19 @@ export function PastelMuseExperience({
       return event.deltaY;
     };
 
-    const applyInteractionVelocity = (deltaY: number, gain: number) => {
+    const applyInteractionVelocity = (deltaY: number, gain: number, elapsedMs: number) => {
       if (!Number.isFinite(deltaY) || deltaY === 0 || prefersReducedMotionRef.current) {
         return;
       }
 
+      const boundedElapsedMs = Math.max(8, Math.min(elapsedMs, 220));
+      const gestureSpeed = Math.abs(deltaY) / boundedElapsedMs;
+      const speedBoost = 1 + Math.min(3.8, gestureSpeed / 1.25);
+      const distanceBoost = 1 + Math.min(1.4, Math.abs(deltaY) / 120);
+      const impulse = -deltaY * gain * speedBoost * distanceBoost;
+
       interactionTargetVelocityRef.current = clampInteractionVelocity(
-        interactionTargetVelocityRef.current + -deltaY * gain,
+        interactionTargetVelocityRef.current + impulse,
       );
       syncMarqueeTargetSpeed();
     };
@@ -523,6 +529,8 @@ export function PastelMuseExperience({
     });
 
     let touchY: number | null = null;
+    let lastWheelEventAt = 0;
+    let lastTouchMoveAt = 0;
     const nonPassiveListenerOptions: AddEventListenerOptions = { passive: false };
     const handleWheel: EventListener = (event) => {
       const wheelEvent = event as WheelEvent;
@@ -538,11 +546,15 @@ export function PastelMuseExperience({
       if (wheelEvent.cancelable) {
         wheelEvent.preventDefault();
       }
-      applyInteractionVelocity(deltaY, MARQUEE_WHEEL_VELOCITY_GAIN);
+      const now = performance.now();
+      const elapsedMs = lastWheelEventAt === 0 ? 16 : now - lastWheelEventAt;
+      lastWheelEventAt = now;
+      applyInteractionVelocity(deltaY, MARQUEE_WHEEL_VELOCITY_GAIN, elapsedMs);
     };
     const handleTouchStart: EventListener = (event) => {
       const touchEvent = event as TouchEvent;
       touchY = touchEvent.touches.length === 1 ? touchEvent.touches[0]?.clientY ?? null : null;
+      lastTouchMoveAt = performance.now();
     };
     const handleTouchMove: EventListener = (event) => {
       const touchEvent = event as TouchEvent;
@@ -571,10 +583,14 @@ export function PastelMuseExperience({
       if (touchEvent.cancelable) {
         touchEvent.preventDefault();
       }
-      applyInteractionVelocity(deltaY, MARQUEE_TOUCH_VELOCITY_GAIN);
+      const now = performance.now();
+      const elapsedMs = lastTouchMoveAt === 0 ? 16 : now - lastTouchMoveAt;
+      lastTouchMoveAt = now;
+      applyInteractionVelocity(deltaY, MARQUEE_TOUCH_VELOCITY_GAIN, elapsedMs);
     };
     const clearTouchGesture: EventListener = () => {
       touchY = null;
+      lastTouchMoveAt = 0;
     };
 
     window.addEventListener("wheel", handleWheel, nonPassiveListenerOptions);
