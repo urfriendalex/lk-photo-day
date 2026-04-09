@@ -73,7 +73,7 @@ export function PastelMuseExperience({
     c += estimateLineCount(content.location);
     const dateDelay = revealAfterLines(c);
     return { locationDelay, dateDelay };
-  }, [content.location, content.date]);
+  }, [content.location]);
 
   const landingFooterReveal = useMemo(() => {
     /** One block so line breaks follow normal HTML flow (same joined string as the mobile info panel). */
@@ -134,26 +134,18 @@ export function PastelMuseExperience({
     const introJoined = content.introText.join(" ");
     const panelIntroDelay = revealAfterLines(c);
     c += estimateLineCount(introJoined);
-    const info = content.infoLines.map((line) => {
+    const info: { line: string; blockDelay: number }[] = [];
+    for (const line of content.infoLines) {
       const blockDelay = revealAfterLines(c);
+      info.push({ line, blockDelay });
       c += estimateLineCount(line);
-      return { line, blockDelay };
-    });
+    }
     return { panelIntroDelay, info };
   }, [content.introText, content.infoLines]);
 
   const marqueeTrack = useMemo(() => {
     return marqueeImages.slice(0, 56);
   }, [marqueeImages]);
-
-  /** One register CTA for the whole experience — delay is fixed at first paint (landing vs topic hash). */
-  const registerCtaRevealDelayRef = useRef<number | null>(null);
-  if (registerCtaRevealDelayRef.current === null) {
-    registerCtaRevealDelayRef.current =
-      activeMode !== "landing" && activeMode !== "signup" && topicReveal
-        ? revealAfterLines(topicReveal.stickyLineIndex)
-        : landingFooterReveal.registerDelay;
-  }
 
   const parseHashMode = useCallback(
     (hash: string): ExperienceMode => {
@@ -174,6 +166,15 @@ export function PastelMuseExperience({
 
   /** Landing or topic to return to when leaving the registration view (Back / toggle). */
   const modeBeforeSignupRef = useRef<ExperienceMode>("landing");
+  /** One register CTA for the whole experience — delay is fixed at first paint (landing vs topic hash). */
+  const [registerCtaRevealDelay] = useState(() => {
+    const initialMode =
+      typeof window === "undefined" ? "landing" : parseHashMode(window.location.hash);
+
+    return initialMode !== "landing" && initialMode !== "signup" && topicReveal
+      ? revealAfterLines(topicReveal.stickyLineIndex)
+      : landingFooterReveal.registerDelay;
+  });
 
   const applyMode = useCallback(
     (
@@ -472,14 +473,17 @@ export function PastelMuseExperience({
 
     const syncMotionPreference = () => {
       prefersReducedMotionRef.current = reduceMotion.matches;
-      syncMarqueeTargetSpeed();
 
       if (prefersReducedMotionRef.current) {
         interactionVelocityRef.current = 0;
+        syncMarqueeTargetSpeed();
         speedRef.current = 0;
         applyTransform();
       } else if (speedRef.current === 0 && !isMarqueePausedRef.current) {
         speedRef.current = baseSpeedRef.current;
+        syncMarqueeTargetSpeed();
+      } else {
+        syncMarqueeTargetSpeed();
       }
     };
 
@@ -507,30 +511,35 @@ export function PastelMuseExperience({
     });
 
     let touchY: number | null = null;
-    const nonPassiveListenerOptions = { passive: false } as const;
-    const handleWheel = (event: WheelEvent) => {
-      if (event.ctrlKey) {
+    const nonPassiveListenerOptions: AddEventListenerOptions = { passive: false };
+    const handleWheel: EventListener = (event) => {
+      const wheelEvent = event as WheelEvent;
+      if (wheelEvent.ctrlKey) {
         return;
       }
 
-      const deltaY = normalizeWheelDelta(event);
+      const deltaY = normalizeWheelDelta(wheelEvent);
       if (deltaY === 0) {
         return;
       }
 
-      event.preventDefault();
+      if (wheelEvent.cancelable) {
+        wheelEvent.preventDefault();
+      }
       applyInteractionVelocity(deltaY, MARQUEE_WHEEL_VELOCITY_GAIN);
     };
-    const handleTouchStart = (event: TouchEvent) => {
-      touchY = event.touches.length === 1 ? event.touches[0]?.clientY ?? null : null;
+    const handleTouchStart: EventListener = (event) => {
+      const touchEvent = event as TouchEvent;
+      touchY = touchEvent.touches.length === 1 ? touchEvent.touches[0]?.clientY ?? null : null;
     };
-    const handleTouchMove = (event: TouchEvent) => {
-      if (event.touches.length !== 1) {
+    const handleTouchMove: EventListener = (event) => {
+      const touchEvent = event as TouchEvent;
+      if (touchEvent.touches.length !== 1) {
         touchY = null;
         return;
       }
 
-      const nextTouchY = event.touches[0]?.clientY ?? null;
+      const nextTouchY = touchEvent.touches[0]?.clientY ?? null;
       if (nextTouchY === null) {
         touchY = null;
         return;
@@ -547,10 +556,12 @@ export function PastelMuseExperience({
         return;
       }
 
-      event.preventDefault();
+      if (touchEvent.cancelable) {
+        touchEvent.preventDefault();
+      }
       applyInteractionVelocity(deltaY, MARQUEE_TOUCH_VELOCITY_GAIN);
     };
-    const clearTouchGesture = () => {
+    const clearTouchGesture: EventListener = () => {
       touchY = null;
     };
 
@@ -895,7 +906,7 @@ export function PastelMuseExperience({
                 playOnce
                 as="span"
                 text={content.registerLabel}
-                blockDelay={registerCtaRevealDelayRef.current ?? landingFooterReveal.registerDelay}
+                blockDelay={registerCtaRevealDelay}
               />
             </span>
             {activeMode === "signup" ? (

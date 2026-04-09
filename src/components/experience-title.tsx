@@ -77,6 +77,11 @@ function ExperienceTitleComponent({
   const introFinishedRef = useRef(false);
   /** Declarative “surface visible” so CSS opacity survives parent re-renders during the intro. */
   const [introSurface, setIntroSurface] = useState(false);
+  const scheduleIntroSurface = useCallback((visible: boolean) => {
+    queueMicrotask(() => {
+      setIntroSurface((current) => (current === visible ? current : visible));
+    });
+  }, []);
 
   const applyFit = useCallback(() => {
     const bleed = bleedRef.current;
@@ -126,7 +131,7 @@ function ExperienceTitleComponent({
 
   useLayoutEffect(() => {
     if (!preloader) {
-      setIntroSurface(false);
+      scheduleIntroSurface(false);
       const button = buttonRef.current;
       if (button) {
         gsap.killTweensOf(button);
@@ -151,7 +156,7 @@ function ExperienceTitleComponent({
       return;
     }
 
-    setIntroSurface(false);
+    scheduleIntroSurface(false);
 
     /* Before any await (fonts.load etc.): hide title so first paint cannot show header slot. */
     gsap.set(button, { opacity: 0 });
@@ -264,7 +269,7 @@ function ExperienceTitleComponent({
       }
       introStartedRef.current = false;
     };
-  }, [preloader, applyFit, onPreloaderComplete]);
+  }, [preloader, applyFit, onPreloaderComplete, scheduleIntroSurface]);
 
   return (
     <div className="experience__title-bleed" ref={bleedRef}>
