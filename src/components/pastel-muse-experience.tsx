@@ -708,7 +708,11 @@ export function PastelMuseExperience({
     <>
       <main
         className={`experience ${
-          activeMode === "landing" ? "experience--landing" : "experience--detail"
+          activeMode === "landing"
+            ? "experience--landing"
+            : activeMode === "signup"
+              ? "experience--signup"
+              : "experience--detail"
         }${showPreloaderShell ? " experience--preloader" : ""}${
           introState === "reveal" ? " experience--preloader-reveal" : ""
         }${introState === "intro" ? " experience--preloader-intro" : ""}`}
