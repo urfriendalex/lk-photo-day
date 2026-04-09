@@ -31,10 +31,11 @@ type HashMode = TopicKey | "register";
 
 const MARQUEE_GROUP_COUNT = 10;
 const MARQUEE_LEAD_GROUPS = 4;
-const MARQUEE_MAX_INTERACTION_VELOCITY = 280;
-const MARQUEE_INTERACTION_DECAY = 4.5;
-const MARQUEE_WHEEL_VELOCITY_GAIN = 0.9;
-const MARQUEE_TOUCH_VELOCITY_GAIN = 1.35;
+const MARQUEE_MAX_INTERACTION_VELOCITY = 520;
+const MARQUEE_INTERACTION_RESPONSE = 13;
+const MARQUEE_INTERACTION_DAMPING = 8.5;
+const MARQUEE_WHEEL_VELOCITY_GAIN = 1.85;
+const MARQUEE_TOUCH_VELOCITY_GAIN = 2.35;
 
 export function PastelMuseExperience({
   content,
@@ -53,6 +54,7 @@ export function PastelMuseExperience({
   const baseSpeedRef = useRef(26);
   const targetSpeedRef = useRef(26);
   const interactionVelocityRef = useRef(0);
+  const interactionTargetVelocityRef = useRef(0);
   const isMarqueePausedRef = useRef(false);
   const prefersReducedMotionRef = useRef(false);
   const frameRef = useRef<number | null>(null);
@@ -406,8 +408,8 @@ export function PastelMuseExperience({
         return;
       }
 
-      interactionVelocityRef.current = clampInteractionVelocity(
-        interactionVelocityRef.current + -deltaY * gain,
+      interactionTargetVelocityRef.current = clampInteractionVelocity(
+        interactionTargetVelocityRef.current + -deltaY * gain,
       );
       syncMarqueeTargetSpeed();
     };
@@ -450,8 +452,16 @@ export function PastelMuseExperience({
       const delta = Math.min((time - previousTime) / 1000, 0.05);
       previousTime = time;
 
-      // Let scroll and swipe impulses decay smoothly back into the ambient marquee drift.
-      interactionVelocityRef.current *= Math.exp(-MARQUEE_INTERACTION_DECAY * delta);
+      const interactionDelta =
+        interactionTargetVelocityRef.current - interactionVelocityRef.current;
+      const attraction = interactionDelta * MARQUEE_INTERACTION_RESPONSE;
+      const damping = interactionVelocityRef.current * MARQUEE_INTERACTION_DAMPING;
+      interactionVelocityRef.current += (attraction - damping) * delta;
+      interactionTargetVelocityRef.current *= Math.exp(-MARQUEE_INTERACTION_DAMPING * 0.72 * delta);
+
+      if (Math.abs(interactionTargetVelocityRef.current) < 0.01) {
+        interactionTargetVelocityRef.current = 0;
+      }
       if (Math.abs(interactionVelocityRef.current) < 0.01) {
         interactionVelocityRef.current = 0;
       }
@@ -476,6 +486,7 @@ export function PastelMuseExperience({
 
       if (prefersReducedMotionRef.current) {
         interactionVelocityRef.current = 0;
+        interactionTargetVelocityRef.current = 0;
         syncMarqueeTargetSpeed();
         speedRef.current = 0;
         applyTransform();
@@ -489,6 +500,7 @@ export function PastelMuseExperience({
 
     prefersReducedMotionRef.current = reduceMotion.matches;
     interactionVelocityRef.current = 0;
+    interactionTargetVelocityRef.current = 0;
     speedRef.current = prefersReducedMotionRef.current ? 0 : baseSpeedRef.current;
     syncMarqueeTargetSpeed();
 
@@ -589,6 +601,7 @@ export function PastelMuseExperience({
       window.removeEventListener("touchend", clearTouchGesture, nonPassiveListenerOptions);
       window.removeEventListener("touchcancel", clearTouchGesture, nonPassiveListenerOptions);
       interactionVelocityRef.current = 0;
+      interactionTargetVelocityRef.current = 0;
       syncMarqueeTargetSpeed();
     };
   }, [activeMode, marqueeTrack.length, syncMarqueeTargetSpeed]);
