@@ -1273,12 +1273,9 @@ button.experience__meta--cta:focus-visible {
     gap: 0.5rem;
   }
 
-  .experience__nav {
-    gap: 0.75rem;
-  }
-
+  .experience__nav,
   .experience__meta {
-    gap: 0.75rem;
+    gap: 0.45rem;
   }
 
   .landing-panel {
