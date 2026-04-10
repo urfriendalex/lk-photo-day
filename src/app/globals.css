@@ -244,7 +244,7 @@ input {
 
 .experience__shell {
   display: grid;
-  gap: clamp(1rem, 1.4vw, 1.6rem);
+  gap: var(--experience-shell-gap);
   width: 100%;
   min-width: 0;
   max-width: 100%;
@@ -451,14 +451,74 @@ input {
 
 .experience__meta {
   display: flex;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
   gap: clamp(0.7rem, 2.2vw, 2.75rem);
+  row-gap: 0.35em;
   min-width: 0;
+  max-width: 100%;
   color: var(--color-ink);
   font-size: var(--nav-size);
   font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.experience__meta-item {
+  flex: 0 1 auto;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+button.experience__meta--cta {
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  max-width: 100%;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+button.experience__meta--cta:focus:not(:focus-visible) {
+  outline: none;
+}
+
+button.experience__meta--cta:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 3px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.experience__meta--cta--follow {
+    cursor: none;
+  }
+}
+
+/* Floating label — same treatment as `.sticky-register__button` (no panel / blur). */
+.experience__meta-cursor-follow {
+  position: fixed;
+  z-index: 10100;
+  margin: 0;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  color: var(--color-accent);
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.03em;
   text-transform: uppercase;
   white-space: nowrap;
+  pointer-events: none;
+  /* Horizontally centered on the pointer; sits slightly below on Y (left/top = client coords). */
+  transform: translate(-50%, 0.65rem);
+  user-select: none;
 }
 
 .experience__main {
@@ -559,9 +619,12 @@ input {
   line-height: 1.12;
 }
 
-.landing-panel__description p,
-.landing-panel__info p {
+.landing-panel__description p {
   margin: 0 0 0.45rem;
+}
+
+.landing-panel__info p {
+  margin: 0 0 0.12rem;
 }
 
 /* One block per visual line (matches DOM probe in `visual-line-wrap.ts`) */
@@ -632,10 +695,6 @@ input {
   white-space: nowrap;
 }
 
-.landing-panel__info p {
-  margin-bottom: 0.12rem;
-}
-
 .landing-panel__cta {
   display: flex;
   justify-content: center;
@@ -650,11 +709,6 @@ input {
 .landing-panel__info {
   justify-self: end;
   text-align: right;
-}
-
-.landing-info-toggle,
-.landing-info-overlay {
-  display: none;
 }
 
 .topic-detail {
@@ -761,14 +815,14 @@ input {
   margin-inline: auto;
   align-content: center;
   justify-items: stretch;
-  gap: clamp(0.9rem, 2vw, 1.5rem);
+  gap: clamp(1.05rem, 2.2vw, 1.75rem);
   font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
   overflow: hidden;
 }
 
 .apply-view__intro {
   display: grid;
-  gap: 0.55rem;
+  gap: 0.7rem;
   width: min(100%, 42rem);
   min-width: 0;
 }
@@ -987,7 +1041,7 @@ input {
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  padding-top: 0.15rem;
+  padding-top: 0.5rem;
 }
 
 .signup-form__button {
@@ -1067,7 +1121,7 @@ input {
 }
 
 .signup-form__meta {
-  margin: 0.2rem 0 0;
+  margin: 0.4rem 0 0;
   color: var(--color-ink-soft);
   font-family: inherit;
   font-size: 0.75rem;
@@ -1075,11 +1129,6 @@ input {
   letter-spacing: 0.01em;
   line-height: 1.5;
   text-transform: none;
-}
-
-.signup-form__actions,
-.signup-form__meta {
-  opacity: 1;
 }
 
 @keyframes signup-form-field-in {
@@ -1193,12 +1242,6 @@ input {
     grid-template-rows: auto minmax(0, 1fr);
   }
 
-  .experience--landing .experience__main {
-    min-height: 0;
-    height: 100%;
-    overflow: hidden;
-  }
-
   .experience--signup {
     height: 100svh;
     min-height: 100svh;
@@ -1212,9 +1255,10 @@ input {
     grid-template-rows: auto minmax(0, 1fr);
   }
 
+  .experience--landing .experience__main,
   .experience--signup .experience__main {
     min-height: 0;
-    height: 100%;
+    height: calc(100% - var(--landing-mobile-header-height));
     overflow: hidden;
   }
 
@@ -1241,10 +1285,15 @@ input {
     grid-template-rows: minmax(0, 1fr);
     min-height: 100%;
     overflow: hidden;
+    gap: 0;
+  }
+
+  .marquee__track {
+    height: var(--landing-mobile-marquee-item-height);
   }
 
   .marquee__item {
-    height: clamp(22.62rem, 106.08vw, 32.76rem);
+    height: var(--landing-mobile-marquee-item-height);
   }
 
   .landing-panel__footer {
@@ -1275,10 +1324,23 @@ input {
     isolation: isolate;
   }
 
+  /* Same 48px-tall frost control as collapsed `.landing-info-panel` (border + padding included in height). */
   .sticky-register.experience__register-cta {
-    padding: clamp(0.5rem, 1.25vw, 0.7rem) clamp(0.85rem, 2.2vw, 1.35rem);
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: var(--landing-mobile-cta-height);
+    height: var(--landing-mobile-cta-height);
+    padding: 0 clamp(0.75rem, 2.1vw, 1.125rem);
+    border: 1px solid #1111111f;
+    background: var(--landing-info-frost-bg);
     -webkit-backdrop-filter: blur(var(--landing-info-frost-blur));
     backdrop-filter: blur(var(--landing-info-frost-blur));
+  }
+
+  .sticky-register.experience__register-cta .sticky-register__button {
+    font-size: var(--landing-mobile-cta-font-size);
   }
 
   /* Hide fixed frost UI until title snap (same window as nav/main reveal); avoids floating over the shell early. */
@@ -1463,7 +1525,7 @@ input {
 
   .apply-view {
     align-content: center;
-    gap: 0.9rem;
+    gap: 1rem;
   }
 
   .apply-view__intro h2,

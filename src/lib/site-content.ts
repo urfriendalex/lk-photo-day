@@ -18,6 +18,8 @@ export type SiteContent = {
   projectTitle: string;
   location: string;
   date: string;
+  /** Short price for the header meta strip (keep in sync with signup pricing). */
+  priceLabel: string;
   registerLabel: string;
   introText: string[];
   infoLines: string[];
@@ -46,7 +48,8 @@ export const siteContent: SiteContent = {
   },
   projectTitle: "PASTEL MUSE",
   location: "WARSAW",
-  date: "25.04.2026",
+  date: "26.04.2026",
+  priceLabel: "950 PLN",
   registerLabel: "ЗАРЕГИСТРИРОВАТЬСЯ",
   introText: [
     "PASTEL MUSE - это однодневный фотодень для девушек, которым нужен не стандартный студийный сет, а цельная нежная визуальная история.",

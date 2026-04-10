@@ -19,6 +19,12 @@ export const LINE_STAGGER_S = 0.07;
 export const DURATION_TRANSFORM_S = 0.62;
 
 /**
+ * Mobile `.landing-info-panel` — delay line reveals until the FAB→sheet width/height transition
+ * (see `--duration-panel-enter`) is mostly complete so motion isn’t stacked on the expansion edge.
+ */
+export const LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S = 0.18;
+
+/**
  * Topic grid — editorial weight: slightly slower than inline text so the reveal feels
  * intentional (luxury pacing), still under ~1s.
  */

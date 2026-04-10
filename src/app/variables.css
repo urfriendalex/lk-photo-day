@@ -4,8 +4,6 @@
   --color-surface: #ffffff;
   --color-ink: #111111;
   --color-ink-soft: rgba(17, 17, 17, 0.72);
-  --color-line: rgba(17, 17, 17, 0.12);
-  --color-shadow: rgba(17, 17, 17, 0.08);
 
   /* Interaction — shared hover/focus color shifts (see .interactive in globals.css) */
   --ease-interaction: cubic-bezier(0.23, 1, 0.32, 1);
@@ -14,10 +12,8 @@
   --color-interactive-accent-hover: color-mix(in srgb, var(--color-accent) 78%, #000000);
   --color-interactive-inverse-bg-hover: color-mix(in srgb, var(--color-ink) 84%, #ffffff);
   --ease-out-strong: cubic-bezier(0.23, 1, 0.32, 1);
-  --ease-in-out-strong: cubic-bezier(0.77, 0, 0.175, 1);
   --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
   --duration-panel-enter: 240ms;
-  --duration-panel-exit: 180ms;
   --landing-info-frost-bg: rgba(255, 255, 255, 0.24);
   --landing-info-frost-blur: 12px;
   --landing-info-panel-pad: 1.25rem;
@@ -32,10 +28,9 @@
 
   --page-pad-x: clamp(0.5rem, 1vw, 1rem);
   --page-pad-y: clamp(0.65rem, 1.5vw, 1rem);
+  /* Same as `.experience__shell` gap — space between header block and main on mobile landing. */
+  --experience-shell-gap: clamp(1rem, 1.4vw, 1.6rem);
   --nav-size: .75rem;
-  --body-size: clamp(0.98rem, 1.2vw, 1.08rem);
-  --cta-size: clamp(1.2rem, 2vw, 1.7rem);
-  --detail-title-size: clamp(2rem, 4vw, 4rem);
   --topic-detail-title-size: clamp(1.35rem, 2.4vw, 2.25rem);
 
   --marquee-gap: clamp(1rem, 1.8vw, 1.9rem);
@@ -50,5 +45,14 @@
   --landing-floating-bottom: max(1.375rem, calc(env(safe-area-inset-bottom) + 0.25rem));
   /* Persistent register / Back — one offset for landing, topic, and signup (no vertical jump on route change) */
   --register-cta-bottom: var(--landing-floating-bottom);
-  --sheet-width: min(28rem, calc(100vw - 2rem));
+  /*
+    Mobile landing (≤720px): measured header stack; matches .experience__main offset in globals.css.
+    Marquee strip height matches .marquee__item in that breakpoint.
+  */
+  --landing-mobile-header-height: 98px;
+  /* Taller strip on ≤720px */
+  --landing-mobile-marquee-item-height: clamp(24rem, 111vw, 35rem);
+  /* Bottom register / Back pill — matches collapsed `.landing-info-panel` footprint (≤720px only in globals) */
+  --landing-mobile-cta-height: 48px;
+  --landing-mobile-cta-font-size: 0.8125rem;
 }

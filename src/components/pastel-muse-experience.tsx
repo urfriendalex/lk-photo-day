@@ -3,6 +3,7 @@
 /* eslint-disable @next/next/no-img-element */
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { gsap } from "gsap";
 
 import { BookingForm } from "@/components/booking-form";
@@ -17,6 +18,7 @@ import {
   GRID_IMAGE_INITIAL_SCALE,
   GRID_IMAGE_REVEAL_DURATION_S,
   GRID_REVEAL_TAIL_LINE_SLOTS,
+  LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S,
 } from "@/lib/reveal-motion";
 import type { SiteContent, TopicKey } from "@/lib/site-content";
 
@@ -74,8 +76,10 @@ export function PastelMuseExperience({
     const locationDelay = revealAfterLines(c);
     c += estimateLineCount(content.location);
     const dateDelay = revealAfterLines(c);
-    return { locationDelay, dateDelay };
-  }, [content.location]);
+    c += estimateLineCount(content.date);
+    const priceDelay = revealAfterLines(c);
+    return { locationDelay, dateDelay, priceDelay };
+  }, [content.location, content.date, content.priceLabel]);
 
   const landingFooterReveal = useMemo(() => {
     /** One block so line breaks follow normal HTML flow (same joined string as the mobile info panel). */
@@ -132,13 +136,14 @@ export function PastelMuseExperience({
   }, [activeContent]);
 
   const landingInfoOverlayReveal = useMemo(() => {
+    const lag = LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S;
     let c = 0;
     const introJoined = content.introText.join(" ");
-    const panelIntroDelay = revealAfterLines(c);
+    const panelIntroDelay = lag + revealAfterLines(c);
     c += estimateLineCount(introJoined);
     const info: { line: string; blockDelay: number }[] = [];
     for (const line of content.infoLines) {
-      const blockDelay = revealAfterLines(c);
+      const blockDelay = lag + revealAfterLines(c);
       info.push({ line, blockDelay });
       c += estimateLineCount(line);
     }
@@ -216,6 +221,56 @@ export function PastelMuseExperience({
       applyMode("signup", { updateUrl: true });
     }
   }, [activeMode, applyMode]);
+
+  const handleHeaderMetaCtaClick = useCallback(() => {
+    if (activeMode === "signup") {
+      document.getElementById("name")?.focus();
+      return;
+    }
+    toggleRegisterMode();
+  }, [activeMode, toggleRegisterMode]);
+
+  const [headerMetaCursorFine, setHeaderMetaCursorFine] = useState(false);
+  const [headerMetaCursorPos, setHeaderMetaCursorPos] = useState<{ x: number; y: number } | null>(
+    null,
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const sync = () => setHeaderMetaCursorFine(mq.matches);
+    sync();
+    mq.addEventListener("change", sync);
+    return () => mq.removeEventListener("change", sync);
+  }, []);
+
+  const handleHeaderMetaPointerEnter = useCallback(
+    (event: React.PointerEvent<HTMLButtonElement>) => {
+      if (!headerMetaCursorFine || event.pointerType === "touch") {
+        return;
+      }
+      setHeaderMetaCursorPos({ x: event.clientX, y: event.clientY });
+    },
+    [headerMetaCursorFine],
+  );
+
+  const handleHeaderMetaPointerMove = useCallback((event: React.PointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === "touch") {
+      return;
+    }
+    setHeaderMetaCursorPos((prev) => {
+      if (prev === null) {
+        return null;
+      }
+      return { x: event.clientX, y: event.clientY };
+    });
+  }, []);
+
+  const handleHeaderMetaPointerLeave = useCallback(() => {
+    setHeaderMetaCursorPos(null);
+  }, []);
+
+  const headerMetaCursorLabel =
+    activeMode === "signup" ? "заполните форму" : content.registerLabel;
 
   const handlePreloaderSnapComplete = useCallback(() => {
     setIntroState("reveal");
@@ -771,18 +826,47 @@ export function PastelMuseExperience({
                 })}
               </nav>
 
-              <div className="experience__meta">
+              <button
+                type="button"
+                className={`experience__meta experience__meta--cta${
+                  headerMetaCursorPos ? " experience__meta--cta--follow" : ""
+                }`}
+                onClick={handleHeaderMetaCtaClick}
+                onPointerEnter={handleHeaderMetaPointerEnter}
+                onPointerMove={handleHeaderMetaPointerMove}
+                onPointerLeave={handleHeaderMetaPointerLeave}
+                title={
+                  headerMetaCursorFine
+                    ? undefined
+                    : activeMode === "signup"
+                      ? "Перейти к форме заявки"
+                      : "Перейти к регистрации"
+                }
+                aria-label={
+                  activeMode === "signup"
+                    ? "Перейти к форме заявки"
+                    : `${content.registerLabel}: ${content.location}, ${content.date}, ${content.priceLabel}`
+                }
+              >
                 <TextReveal
                   as="span"
+                  className="experience__meta-item"
                   text={content.location}
                   blockDelay={headerMetaReveal.locationDelay}
                 />
                 <TextReveal
                   as="span"
+                  className="experience__meta-item"
                   text={content.date}
                   blockDelay={headerMetaReveal.dateDelay}
                 />
-              </div>
+                <TextReveal
+                  as="span"
+                  className="experience__meta-item"
+                  text={content.priceLabel}
+                  blockDelay={headerMetaReveal.priceDelay}
+                />
+              </button>
             </div>
           </header>
 
@@ -1031,6 +1115,18 @@ export function PastelMuseExperience({
           ) : null}
         </div>
       ) : null}
+      {headerMetaCursorPos
+        ? createPortal(
+            <div
+              className="experience__meta-cursor-follow"
+              style={{ left: headerMetaCursorPos.x, top: headerMetaCursorPos.y }}
+              aria-hidden
+            >
+              {headerMetaCursorLabel}
+            </div>,
+            document.body,
+          )
+        : null}
     </>
   );
 }
