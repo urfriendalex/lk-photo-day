@@ -913,6 +913,8 @@ input {
   border: 0;
 }
 
+/* Ink baseline (::before) + accent draw on focus (::after), same pattern as `.signup-form__button` */
+.signup-form__field::before,
 .signup-form__field::after {
   content: "";
   position: absolute;
@@ -920,11 +922,38 @@ input {
   bottom: -1px;
   left: 0;
   height: 1px;
+  pointer-events: none;
+}
+
+.signup-form__field::before {
   background: var(--color-ink);
   transform: scaleX(0);
   transform-origin: 0 50%;
   animation: signup-form-line-reveal 560ms var(--ease-out-strong) forwards;
   animation-delay: calc(var(--field-delay, 0s) + 60ms);
+}
+
+/* After intro (or first focus), keep static ink line — avoids replay when focus-within ends */
+.signup-form__field[data-signup-line-revealed="true"]::before {
+  animation: none;
+  transform: scaleX(1);
+  background: var(--color-ink);
+}
+
+/* clip-path inset(left): open L→R on focus, close L→R on blur (transform scale fights origin interpolation) */
+.signup-form__field::after {
+  background: color-mix(in srgb, var(--color-accent) 72%, var(--color-ink) 28%);
+  clip-path: inset(0 0 0 100%);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .signup-form__field::after {
+    transition: clip-path var(--link-underline-duration) var(--ease-link-underline);
+  }
+}
+
+.signup-form__field:focus-within::after {
+  clip-path: inset(0 0 0 0);
 }
 
 .signup-form input,
@@ -954,12 +983,6 @@ input {
   outline: none;
 }
 
-.signup-form__field:focus-within::after {
-  background: color-mix(in srgb, var(--color-accent) 72%, var(--color-ink) 28%);
-  transform: scaleX(1);
-  animation: none;
-}
-
 .signup-form__actions {
   display: flex;
   align-items: center;
@@ -985,26 +1008,62 @@ input {
   cursor: pointer;
 }
 
+/* Ink baseline (rest) + accent drawn on hover — mirrors `.link-underline` / `.topic-detail__link` */
+.signup-form__button::before,
 .signup-form__button::after {
   content: "";
   position: absolute;
+  left: 0;
   right: 0;
   bottom: 0;
-  left: 0;
   height: 1px;
-  background: currentColor;
+  pointer-events: none;
+}
+
+.signup-form__button::before {
+  background: var(--color-ink);
   transform-origin: 0 50%;
   transform: scaleX(1);
 }
 
-.signup-form__button:has(.text-reveal)::after {
+.signup-form__button::after {
+  background: var(--color-accent);
+  transform-origin: 100% 50%;
+  transform: scale3d(0, 1, 1);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .signup-form__button::after {
+    transition: transform var(--link-underline-duration) var(--ease-link-underline);
+  }
+}
+
+.signup-form__button:has(.text-reveal)::before {
   transform: scaleX(0);
   transition: none;
 }
 
-.signup-form__button.text-reveal-underline--ready:has(.text-reveal)::after {
+.signup-form__button.text-reveal-underline--ready:has(.text-reveal)::before {
   transform: scaleX(1);
   transition: transform var(--link-underline-duration) var(--ease-link-underline);
+}
+
+/* Keep label ink — `.interactive` otherwise tints text on hover/focus */
+.signup-form__button.interactive:hover,
+.signup-form__button.interactive:focus-visible {
+  color: var(--color-ink);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .signup-form__button:hover::after {
+    transform-origin: 0% 50%;
+    transform: scale3d(1, 1, 1);
+  }
+}
+
+.signup-form__button:focus-visible::after {
+  transform-origin: 0% 50%;
+  transform: scale3d(1, 1, 1);
 }
 
 .signup-form__meta {
@@ -1054,9 +1113,18 @@ input {
     will-change: auto;
   }
 
-  .signup-form__field::after {
+  .signup-form__field::before {
     animation: none;
     transform: scaleX(1);
+  }
+
+  .signup-form__field::after {
+    transition: none;
+    clip-path: inset(0 0 0 100%);
+  }
+
+  .signup-form__field:focus-within::after {
+    clip-path: inset(0 0 0 0);
   }
 
   .signup-form__field {
@@ -1065,7 +1133,17 @@ input {
     animation: none;
   }
 
-  .signup-form__button.text-reveal-underline--ready:has(.text-reveal)::after {
+  .signup-form__button::after {
+    transition: none;
+  }
+
+  .signup-form__button:hover::after,
+  .signup-form__button:focus-visible::after {
+    transform-origin: 0% 50%;
+    transform: scale3d(1, 1, 1);
+  }
+
+  .signup-form__button.text-reveal-underline--ready:has(.text-reveal)::before {
     transition: none;
   }
 }

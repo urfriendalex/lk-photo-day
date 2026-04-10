@@ -70,7 +70,7 @@ export const siteContent: SiteContent = {
       emailLabel: "Email",
       emailPlaceholder: "Email",
       instagramLabel: "Instagram handle",
-      instagramPlaceholder: "@yourhandle",
+      instagramPlaceholder: "@yourinstagramhandle",
     },
     button: "ОСТАВИТЬ ЗАЯВКУ",
     helperText: "После заявки мы свяжемся с вами в Instagram.",
@@ -82,7 +82,7 @@ export const siteContent: SiteContent = {
       person: "@liza_karasiova",
       personUrl: "https://www.instagram.com/liza_karasiova/",
       description: [
-        "Стайлинг собирает Лиза Карасиова: мягкое pastel-настроение, женственный силуэт и чуть кинематографичная подача вместо агрессивной подиумной драматичности.",
+        "Стайлинг собирает Лиза Карасёва: мягкое pastel-настроение, женственный силуэт и чуть кинематографичная подача вместо агрессивной подиумной драматичности.",
         "Фокус на форме, фактуре и цветовой гармонии, чтобы каждый кадр выглядел цельно еще до того, как начнется съемка.",
       ],
       ctaLabel: "view stylist",
@@ -106,7 +106,7 @@ export const siteContent: SiteContent = {
       person: "@takonik.visage",
       personUrl: "https://www.instagram.com/takonik.visage/",
       description: [
-        "Макияж создает takonik.visage в логике Pastel Muse: сияющая кожа, деликатная скульптура и детали, которые красиво читаются в кадре.",
+        "Макияж создает Таня Таконик в логике Pastel Muse: сияющая кожа, деликатная скульптура и детали, которые красиво читаются в кадре.",
         "Задача не в тяжелой трансформации, а в тонкой, собранной версии образа, которая поддерживает мягкость всей истории.",
       ],
       ctaLabel: "view makeup artist",

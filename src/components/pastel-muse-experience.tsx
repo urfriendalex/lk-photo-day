@@ -565,7 +565,7 @@ export function PastelMuseExperience({
       const now = performance.now();
       const elapsedMs = lastWheelEventAt === 0 ? 16 : now - lastWheelEventAt;
       lastWheelEventAt = now;
-      applyInteractionVelocity(deltaY, MARQUEE_WHEEL_VELOCITY_GAIN, elapsedMs);
+      applyInteractionVelocity(-deltaY, MARQUEE_WHEEL_VELOCITY_GAIN, elapsedMs);
     };
     const handleTouchStart: EventListener = (event) => {
       const touchEvent = event as TouchEvent;

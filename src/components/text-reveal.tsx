@@ -38,7 +38,7 @@ function isElementInViewport(el: HTMLElement): boolean {
   return rect.top < vh && rect.bottom > 0;
 }
 
-/** `a.text-link--drawn`, or submit button `::after` + TextReveal (sticky CTAs have no drawn line). */
+/** `a.text-link--drawn`, or submit button ink `::before` + TextReveal (sticky CTAs have no drawn line). */
 function getUnderlineHosts(root: HTMLElement): HTMLElement[] {
   const anchors = [...root.querySelectorAll<HTMLElement>("a.text-link--drawn")];
   if (anchors.length > 0) {
@@ -54,7 +54,7 @@ function clearUnderlineState(hosts: HTMLElement[]) {
   });
 }
 
-/** Anchors: only clear `pending` so the line stays off until hover. Buttons: add `ready` for the submit `::after` reveal. */
+/** Anchors: only clear `pending` so the line stays off until hover. Buttons: add `ready` for the submit ink `::before` reveal. */
 function markUnderlineRevealed(hosts: HTMLElement[]) {
   hosts.forEach((el) => {
     el.classList.remove("text-reveal-underline--pending");

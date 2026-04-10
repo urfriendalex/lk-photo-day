@@ -1,10 +1,25 @@
 "use client";
 
-import { type CSSProperties, useState } from "react";
+import {
+  type AnimationEvent,
+  type ChangeEvent,
+  type CSSProperties,
+  type FocusEvent,
+  useCallback,
+  useState,
+} from "react";
 
 import { TextReveal } from "@/components/text-reveal";
+import { bookingSchema } from "@/lib/booking";
 import { revealAfterLines } from "@/lib/reveal-hierarchy";
 import { siteContent } from "@/lib/site-content";
+
+/** Ensures non-empty Instagram input always has a single leading @. */
+function normalizeInstagramHandleInput(value: string): string {
+  if (value === "") return "";
+  const body = value.replace(/^@+/, "");
+  return body === "" ? "@" : `@${body}`;
+}
 
 type FormState =
   | { status: "idle"; message?: string }
@@ -21,22 +36,36 @@ type BookingFormProps = {
 
 export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
   const [state, setState] = useState<FormState>(initialState);
+  const [instagram, setInstagram] = useState("");
+
+  const handleInstagramChange = useCallback((event: ChangeEvent<HTMLInputElement>) => {
+    setInstagram(normalizeInstagramHandleInput(event.target.value));
+  }, []);
 
   async function handleSubmit(formData: FormData) {
-    setState({ status: "submitting" });
-
     const payload = {
       name: String(formData.get("name") || ""),
       email: String(formData.get("email") || ""),
       instagram: String(formData.get("instagram") || ""),
     };
 
+    const parsed = bookingSchema.safeParse(payload);
+    if (!parsed.success) {
+      setState({
+        status: "error",
+        message: parsed.error.issues[0]?.message ?? "Проверьте данные формы.",
+      });
+      return;
+    }
+
+    setState({ status: "submitting" });
+
     const response = await fetch("/api/book", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(parsed.data),
     });
 
     const result = (await response.json()) as { error?: string; message?: string };
@@ -61,6 +90,27 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
       "--field-delay": `${revealAfterLines(base + lineOffset)}s`,
     }) as CSSProperties;
 
+  const markSignupFieldLineRevealed = useCallback((el: HTMLDivElement) => {
+    el.dataset.signupLineRevealed = "true";
+  }, []);
+
+  const handleSignupFieldLineAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (!event.animationName.includes("signup-form-line-reveal")) {
+        return;
+      }
+      markSignupFieldLineRevealed(event.currentTarget);
+    },
+    [markSignupFieldLineRevealed],
+  );
+
+  const handleSignupFieldFocus = useCallback(
+    (event: FocusEvent<HTMLDivElement>) => {
+      markSignupFieldLineRevealed(event.currentTarget);
+    },
+    [markSignupFieldLineRevealed],
+  );
+
   if (state.status === "success") {
     return (
       <div className="booking-success" aria-live="polite">
@@ -80,7 +130,12 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
 
   return (
     <form action={handleSubmit} className="signup-form">
-      <div className="signup-form__field" style={fieldDelay(0)}>
+      <div
+        className="signup-form__field"
+        style={fieldDelay(0)}
+        onAnimationEnd={handleSignupFieldLineAnimationEnd}
+        onFocus={handleSignupFieldFocus}
+      >
         <label className="signup-form__sr-only" htmlFor="name">
           {siteContent.signup.fields.nameLabel}
         </label>
@@ -94,7 +149,12 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
         />
       </div>
 
-      <div className="signup-form__field" style={fieldDelay(1)}>
+      <div
+        className="signup-form__field"
+        style={fieldDelay(1)}
+        onAnimationEnd={handleSignupFieldLineAnimationEnd}
+        onFocus={handleSignupFieldFocus}
+      >
         <label className="signup-form__sr-only" htmlFor="email">
           {siteContent.signup.fields.emailLabel}
         </label>
@@ -108,7 +168,12 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
         />
       </div>
 
-      <div className="signup-form__field signup-form__field--instagram" style={fieldDelay(2)}>
+      <div
+        className="signup-form__field signup-form__field--instagram"
+        style={fieldDelay(2)}
+        onAnimationEnd={handleSignupFieldLineAnimationEnd}
+        onFocus={handleSignupFieldFocus}
+      >
         <label className="signup-form__sr-only" htmlFor="instagram">
           {siteContent.signup.fields.instagramLabel}
         </label>
@@ -116,6 +181,8 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
           id="instagram"
           name="instagram"
           type="text"
+          value={instagram}
+          onChange={handleInstagramChange}
           placeholder={siteContent.signup.fields.instagramPlaceholder}
           autoComplete="username"
           required
