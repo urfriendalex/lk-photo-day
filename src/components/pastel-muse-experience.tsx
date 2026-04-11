@@ -446,7 +446,7 @@ export function PastelMuseExperience({
       );
     };
 
-    const normalizeWheelDelta = (event: WheelEvent) => {
+    const normalizeWheelDeltaY = (event: WheelEvent) => {
       if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
         return event.deltaY * 16;
       }
@@ -458,18 +458,30 @@ export function PastelMuseExperience({
       return event.deltaY;
     };
 
-    const applyInteractionVelocity = (deltaY: number, gain: number, elapsedMs: number) => {
-      if (!Number.isFinite(deltaY) || deltaY === 0 || prefersReducedMotionRef.current) {
+    const normalizeWheelDeltaX = (event: WheelEvent) => {
+      if (event.deltaMode === WheelEvent.DOM_DELTA_LINE) {
+        return event.deltaX * 16;
+      }
+
+      if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) {
+        return event.deltaX * window.innerWidth;
+      }
+
+      return event.deltaX;
+    };
+
+    const applyInteractionVelocity = (primaryDelta: number, gain: number, elapsedMs: number) => {
+      if (!Number.isFinite(primaryDelta) || primaryDelta === 0 || prefersReducedMotionRef.current) {
         return;
       }
 
       const boundedElapsedMs = Math.max(4, Math.min(elapsedMs, 180));
-      const gestureSpeed = Math.abs(deltaY) / boundedElapsedMs;
+      const gestureSpeed = Math.abs(primaryDelta) / boundedElapsedMs;
       const speedBoost =
         1 + Math.min(12, Math.pow(Math.max(0, gestureSpeed - 0.82), 1.1) * 1.22);
       const distanceBoost =
-        1 + Math.min(2.2, Math.pow(Math.abs(deltaY) / 140, 0.84) * 0.52);
-      const impulse = -deltaY * gain * speedBoost * distanceBoost;
+        1 + Math.min(2.2, Math.pow(Math.abs(primaryDelta) / 140, 0.84) * 0.52);
+      const impulse = -primaryDelta * gain * speedBoost * distanceBoost;
 
       interactionTargetVelocityRef.current = clampInteractionVelocity(
         interactionTargetVelocityRef.current + impulse,
@@ -600,6 +612,7 @@ export function PastelMuseExperience({
     });
 
     let touchY: number | null = null;
+    let touchX: number | null = null;
     let lastWheelEventAt = 0;
     let lastTouchMoveAt = 0;
     const nonPassiveListenerOptions: AddEventListenerOptions = { passive: false };
@@ -609,8 +622,13 @@ export function PastelMuseExperience({
         return;
       }
 
-      const deltaY = normalizeWheelDelta(wheelEvent);
-      if (deltaY === 0) {
+      const deltaY = normalizeWheelDeltaY(wheelEvent);
+      const deltaX = normalizeWheelDeltaX(wheelEvent);
+      const absY = Math.abs(deltaY);
+      const absX = Math.abs(deltaX);
+      const primaryDelta =
+        absX > absY ? deltaX : absY > 0 ? deltaY : absX > 0 ? deltaX : 0;
+      if (primaryDelta === 0) {
         return;
       }
 
@@ -620,34 +638,52 @@ export function PastelMuseExperience({
       const now = performance.now();
       const elapsedMs = lastWheelEventAt === 0 ? 16 : now - lastWheelEventAt;
       lastWheelEventAt = now;
-      applyInteractionVelocity(-deltaY, MARQUEE_WHEEL_VELOCITY_GAIN, elapsedMs);
+      applyInteractionVelocity(-primaryDelta, MARQUEE_WHEEL_VELOCITY_GAIN, elapsedMs);
     };
     const handleTouchStart: EventListener = (event) => {
       const touchEvent = event as TouchEvent;
-      touchY = touchEvent.touches.length === 1 ? touchEvent.touches[0]?.clientY ?? null : null;
+      if (touchEvent.touches.length === 1) {
+        const t = touchEvent.touches[0];
+        touchY = t?.clientY ?? null;
+        touchX = t?.clientX ?? null;
+      } else {
+        touchY = null;
+        touchX = null;
+      }
       lastTouchMoveAt = performance.now();
     };
     const handleTouchMove: EventListener = (event) => {
       const touchEvent = event as TouchEvent;
       if (touchEvent.touches.length !== 1) {
         touchY = null;
+        touchX = null;
         return;
       }
 
-      const nextTouchY = touchEvent.touches[0]?.clientY ?? null;
-      if (nextTouchY === null) {
+      const t = touchEvent.touches[0];
+      const nextTouchY = t?.clientY ?? null;
+      const nextTouchX = t?.clientX ?? null;
+      if (nextTouchY === null || nextTouchX === null) {
         touchY = null;
+        touchX = null;
         return;
       }
 
-      if (touchY === null) {
+      if (touchY === null || touchX === null) {
         touchY = nextTouchY;
+        touchX = nextTouchX;
         return;
       }
 
       const deltaY = nextTouchY - touchY;
+      const deltaX = nextTouchX - touchX;
       touchY = nextTouchY;
-      if (deltaY === 0) {
+      touchX = nextTouchX;
+      const absY = Math.abs(deltaY);
+      const absX = Math.abs(deltaX);
+      const primaryDelta =
+        absX > absY ? deltaX : absY > 0 ? deltaY : absX > 0 ? deltaX : 0;
+      if (primaryDelta === 0) {
         return;
       }
 
@@ -657,10 +693,11 @@ export function PastelMuseExperience({
       const now = performance.now();
       const elapsedMs = lastTouchMoveAt === 0 ? 16 : now - lastTouchMoveAt;
       lastTouchMoveAt = now;
-      applyInteractionVelocity(deltaY, MARQUEE_TOUCH_VELOCITY_GAIN, elapsedMs);
+      applyInteractionVelocity(primaryDelta, MARQUEE_TOUCH_VELOCITY_GAIN, elapsedMs);
     };
     const clearTouchGesture: EventListener = () => {
       touchY = null;
+      touchX = null;
       lastTouchMoveAt = 0;
     };
 
