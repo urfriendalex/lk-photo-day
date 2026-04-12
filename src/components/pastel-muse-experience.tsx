@@ -47,6 +47,7 @@ export function PastelMuseExperience({
   const [activeMode, setActiveMode] = useState<ExperienceMode>("landing");
   const [activeTopic, setActiveTopic] = useState<TopicKey | null>(null);
   const [isLandingInfoOpen, setIsLandingInfoOpen] = useState(false);
+  const landingInfoPanelRef = useRef<HTMLDivElement | null>(null);
   const marqueeViewportRef = useRef<HTMLDivElement | null>(null);
   const marqueeGroupRef = useRef<HTMLDivElement | null>(null);
   const marqueeTrackRef = useRef<HTMLDivElement | null>(null);
@@ -400,6 +401,37 @@ export function PastelMuseExperience({
       window.removeEventListener("keydown", handleKeyDown);
     };
   }, [isLandingInfoOpen]);
+
+  /** Mobile footer sheet (≤720px): dismiss when tapping outside the panel; matches `globals.css` breakpoint. */
+  useEffect(() => {
+    if (!isLandingInfoOpen || activeMode !== "landing") {
+      return;
+    }
+
+    const mobileLandingInfoMq = window.matchMedia("(max-width: 720px)");
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!mobileLandingInfoMq.matches) {
+        return;
+      }
+
+      const panel = landingInfoPanelRef.current;
+      if (!panel || panel.contains(event.target as Node)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+      setIsLandingInfoOpen(false);
+    };
+
+    const listenerOptions: AddEventListenerOptions = { capture: true, passive: false };
+    document.addEventListener("pointerdown", handlePointerDown, listenerOptions);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown, listenerOptions);
+    };
+  }, [activeMode, isLandingInfoOpen]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -1095,6 +1127,7 @@ export function PastelMuseExperience({
       {onLanding ? (
         <div
           id="landing-info-panel"
+          ref={landingInfoPanelRef}
           className={`landing-info-panel${isLandingInfoOpen ? " is-open" : ""}`}
           role="region"
           aria-label="Pastel Muse details"
