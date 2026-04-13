@@ -22,6 +22,30 @@ import {
 } from "@/lib/reveal-motion";
 import type { SiteContent, TopicKey } from "@/lib/site-content";
 
+const STUDIO_ISKRA_MARKER = "STUDIO ISKRA";
+const STUDIO_ISKRA_HREF = "https://studioiskra.eu/";
+
+function renderStudioIskraInLine(line: string) {
+  const i = line.indexOf(STUDIO_ISKRA_MARKER);
+  if (i === -1) {
+    return line;
+  }
+  return (
+    <>
+      {line.slice(0, i)}
+      <a
+        className="text-link text-link--drawn"
+        href={STUDIO_ISKRA_HREF}
+        target="_blank"
+        rel="noreferrer"
+      >
+        {STUDIO_ISKRA_MARKER}
+      </a>
+      {line.slice(i + STUDIO_ISKRA_MARKER.length)}
+    </>
+  );
+}
+
 type ExperienceProps = {
   content: SiteContent;
   marqueeImages: string[];
@@ -83,12 +107,12 @@ export function PastelMuseExperience({
   }, [content.location, content.date, content.priceLabel]);
 
   const landingFooterReveal = useMemo(() => {
-    /** One block so line breaks follow normal HTML flow (same joined string as the mobile info panel). */
-    const introParagraph = content.introText.join(" ");
-    const intro = [
-      { paragraph: introParagraph, blockDelay: revealAfterLines(0) },
-    ];
-    let c = estimateLineCount(introParagraph);
+    let c = 0;
+    const intro = content.introText.map((paragraph) => {
+      const blockDelay = revealAfterLines(c);
+      c += estimateLineCount(paragraph);
+      return { paragraph, blockDelay };
+    });
     const registerDelay = revealAfterLines(c);
     c += estimateLineCount(content.registerLabel);
     const info: { line: string; blockDelay: number }[] = [];
@@ -107,8 +131,10 @@ export function PastelMuseExperience({
     let c = estimateLineCount(introParagraph);
     const titleDelay = revealAfterLines(c);
     c += estimateLineCount(content.signup.title);
+    const titleSublineDelay = revealAfterLines(c);
+    c += estimateLineCount(content.signup.titleSubline);
     const formBaseLines = c;
-    return { intro, titleDelay, formBaseLines };
+    return { intro, titleDelay, titleSublineDelay, formBaseLines };
   }, [content.signup]);
 
   const topicReveal = useMemo(() => {
@@ -139,16 +165,18 @@ export function PastelMuseExperience({
   const landingInfoOverlayReveal = useMemo(() => {
     const lag = LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S;
     let c = 0;
-    const introJoined = content.introText.join(" ");
-    const panelIntroDelay = lag + revealAfterLines(c);
-    c += estimateLineCount(introJoined);
+    const introParagraphs = content.introText.map((paragraph) => {
+      const blockDelay = lag + revealAfterLines(c);
+      c += estimateLineCount(paragraph);
+      return { paragraph, blockDelay };
+    });
     const info: { line: string; blockDelay: number }[] = [];
     for (const line of content.infoLines) {
       const blockDelay = lag + revealAfterLines(c);
       info.push({ line, blockDelay });
       c += estimateLineCount(line);
     }
-    return { panelIntroDelay, info };
+    return { introParagraphs, info };
   }, [content.introText, content.infoLines]);
 
   const marqueeTrack = useMemo(() => {
@@ -948,11 +976,19 @@ export function PastelMuseExperience({
                       <TextReveal key={paragraph} text={paragraph} blockDelay={blockDelay} />
                     ))}
                   </div>
-                  <TextReveal
-                    as="h2"
-                    text={content.signup.title}
-                    blockDelay={signupViewReveal.titleDelay}
-                  />
+                  <div className="apply-view__title-block">
+                    <TextReveal
+                      as="h2"
+                      text={content.signup.title}
+                      blockDelay={signupViewReveal.titleDelay}
+                    />
+                    <TextReveal
+                      as="p"
+                      className="apply-view__title-subline"
+                      text={content.signup.titleSubline}
+                      blockDelay={signupViewReveal.titleSublineDelay}
+                    />
+                  </div>
                 </div>
                 <div className="apply-view__form">
                   <BookingForm revealBaseLines={signupViewReveal.formBaseLines} />
@@ -1046,8 +1082,17 @@ export function PastelMuseExperience({
 
                 <div className="landing-panel__footer">
                   <div className="landing-panel__description">
-                    {landingFooterReveal.intro.map(({ paragraph, blockDelay }) => (
-                      <TextReveal key={paragraph} text={paragraph} blockDelay={blockDelay} />
+                    {landingFooterReveal.intro.map(({ paragraph, blockDelay }, index) => (
+                      <TextReveal
+                        key={`landing-intro-${index}`}
+                        text={paragraph}
+                        blockDelay={blockDelay}
+                        renderLine={
+                          paragraph.includes(STUDIO_ISKRA_MARKER)
+                            ? renderStudioIskraInLine
+                            : undefined
+                        }
+                      />
                     ))}
                   </div>
 
@@ -1146,10 +1191,18 @@ export function PastelMuseExperience({
           {isLandingInfoOpen ? (
             <div id="landing-info-panel-body" className="landing-info-panel__body">
               <div className="landing-info-panel__description">
-                <TextReveal
-                  text={content.introText.join(" ")}
-                  blockDelay={landingInfoOverlayReveal.panelIntroDelay}
-                />
+                {landingInfoOverlayReveal.introParagraphs.map(({ paragraph, blockDelay }, index) => (
+                  <TextReveal
+                    key={`info-intro-${index}`}
+                    text={paragraph}
+                    blockDelay={blockDelay}
+                    renderLine={
+                      paragraph.includes(STUDIO_ISKRA_MARKER)
+                        ? renderStudioIskraInLine
+                        : undefined
+                    }
+                  />
+                ))}
               </div>
 
               <div className="landing-info-panel__info">

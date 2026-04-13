@@ -218,8 +218,8 @@ function ExperienceTitleComponent({
           await new Promise<void>((resolve) => {
             gsap.to(inners, {
               yPercent: 0,
-              duration: 0.55,
-              stagger: 0.035,
+              duration: 0.4125,
+              stagger: 0.02625,
               ease: "power2.out",
               onComplete: resolve,
             });
@@ -245,7 +245,7 @@ function ExperienceTitleComponent({
         gsap.set(button, { opacity: 1 });
 
         Flip.from(state, {
-          duration: reduceMotion ? 0.05 : 1.15,
+          duration: reduceMotion ? 0.05 : 0.8625,
           ease: "power3.inOut",
           absolute: true,
           simple: true,
