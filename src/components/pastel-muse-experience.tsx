@@ -805,6 +805,14 @@ export function PastelMuseExperience({
   const [navRowPadHeight, setNavRowPadHeight] = useState(0);
 
   const syncNavDock = useCallback(() => {
+    if (activeMode === "signup") {
+      if (navDockedRef.current) {
+        navDockedRef.current = false;
+        setNavDocked(false);
+      }
+      return;
+    }
+
     const el = navRowRef.current;
     if (!el) {
       return;
@@ -819,9 +827,15 @@ export function PastelMuseExperience({
       navDockedRef.current = shouldDock;
       setNavDocked(shouldDock);
     }
-  }, []);
+  }, [activeMode]);
 
   useLayoutEffect(() => {
+    /* SPA keeps window scroll from the previous view; signup is 100vh + overflow hidden, so stale
+       scrollY + dock state left the nav fixed at the top incorrectly (esp. mobile Safari). */
+    if (activeMode === "signup") {
+      window.scrollTo(0, 0);
+    }
+
     navDockedRef.current = false;
     setNavDocked(false);
 
@@ -832,6 +846,10 @@ export function PastelMuseExperience({
 
     pinScrollYRef.current = el.getBoundingClientRect().top + window.scrollY;
     setNavRowPadHeight(el.offsetHeight);
+
+    if (activeMode === "signup") {
+      return;
+    }
 
     const shouldDock = window.scrollY >= pinScrollYRef.current - 1;
     navDockedRef.current = shouldDock;
