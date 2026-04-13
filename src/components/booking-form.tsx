@@ -201,6 +201,12 @@ export function BookingForm({ revealBaseLines = 0 }: BookingFormProps) {
             />
           )}
         </button>
+        <TextReveal
+          as="span"
+          className="signup-form__spots-left"
+          text={siteContent.signup.spotsLeftText}
+          blockDelay={revealAfterLines(base + 3)}
+        />
       </div>
       <p className="signup-form__meta" aria-live="polite">
         {state.status === "error" ? (

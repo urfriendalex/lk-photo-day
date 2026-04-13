@@ -27,6 +27,8 @@ export type SiteContent = {
     title: string;
     /** Shown under the price title, lighter weight (e.g. prepayment terms). */
     titleSubline: string;
+    /** Urgency line above the form fields (e.g. spots left). */
+    spotsLeftText: string;
     intro: string[];
     fields: {
       nameLabel: string;
@@ -70,6 +72,7 @@ export const siteContent: SiteContent = {
   signup: {
     title: "Стоимость — 950 PLN",
     titleSubline: "Предоплата — 50%",
+    spotsLeftText: "Осталось только 2 места",
     intro: [
       "В стоимость входит съемка, макияж, стайлинг и готовая\u00A0визуальная\u00A0история\u00A0в\u00A0эстетике\u00A0Pastel\u00A0Muse.",
       "После обработки заявки мы свяжемся с вами в Instagram, отправим детали и подскажем следующий шаг.",
