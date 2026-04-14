@@ -19,6 +19,7 @@ import {
   GRID_IMAGE_REVEAL_DURATION_S,
   GRID_REVEAL_TAIL_LINE_SLOTS,
   LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S,
+  LINE_STAGGER_S,
 } from "@/lib/reveal-motion";
 import type { SiteContent, TopicKey } from "@/lib/site-content";
 
@@ -1151,39 +1152,52 @@ export function PastelMuseExperience({
         </section>
 
         <div className="landing-panel__cta sticky-register experience__register-cta">
-          <button
-            className={`sticky-register__button landing-panel__register-button interactive${
-              activeMode === "signup" ? "" : " interactive--accent"
-            }`}
-            type="button"
-            onClick={
-              activeMode === "signup"
-                ? () => applyMode(modeBeforeSignupRef.current, { updateUrl: true })
-                : toggleRegisterMode
-            }
-          >
-            {/* Keep register TextReveal mounted; hide on signup so Back does not replay the reveal or resize the label */}
-            <span
-              className={
-                activeMode === "signup"
-                  ? "experience__register-cta-layer experience__register-cta-layer--concealed"
-                  : "experience__register-cta-layer"
-              }
-              aria-hidden={activeMode === "signup"}
-            >
+          <div className="experience__register-cta-stack">
+            {activeMode !== "signup" ? (
               <TextReveal
                 playOnce
                 as="span"
-                text={content.registerLabel}
-                blockDelay={registerCtaRevealDelay}
+                className="sticky-register__spots-hint"
+                text={content.signup.spotsLeftText}
+                blockDelay={Math.max(0, registerCtaRevealDelay - LINE_STAGGER_S)}
               />
-            </span>
-            {activeMode === "signup" ? (
-              <span className="experience__register-cta-layer experience__register-cta-layer--back">
-                Back
-              </span>
             ) : null}
-          </button>
+            <div className="experience__register-cta-button-wrap">
+              <button
+                className={`sticky-register__button landing-panel__register-button interactive${
+                  activeMode === "signup" ? "" : " interactive--accent"
+                }`}
+                type="button"
+                onClick={
+                  activeMode === "signup"
+                    ? () => applyMode(modeBeforeSignupRef.current, { updateUrl: true })
+                    : toggleRegisterMode
+                }
+              >
+                {/* Keep register TextReveal mounted; hide on signup so Back does not replay the reveal or resize the label */}
+                <span
+                  className={
+                    activeMode === "signup"
+                      ? "experience__register-cta-layer experience__register-cta-layer--concealed"
+                      : "experience__register-cta-layer"
+                  }
+                  aria-hidden={activeMode === "signup"}
+                >
+                  <TextReveal
+                    playOnce
+                    as="span"
+                    text={content.registerLabel}
+                    blockDelay={registerCtaRevealDelay}
+                  />
+                </span>
+                {activeMode === "signup" ? (
+                  <span className="experience__register-cta-layer experience__register-cta-layer--back">
+                    Back
+                  </span>
+                ) : null}
+              </button>
+            </div>
+          </div>
         </div>
       </main>
 
