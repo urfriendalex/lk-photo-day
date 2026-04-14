@@ -33,7 +33,7 @@ export async function sendBookingEmail(payload: BookingPayload) {
   const resend = new Resend(resendApiKey);
 
   return resend.emails.send({
-    from: "Photo Day <onboarding@resend.dev>",
+    from: "Photo Day <onboarding@alkouka.resend.app>",
     to: [bookingEmailTo],
     subject: `New Pastel Muse contact: ${payload.name}`,
     text: [

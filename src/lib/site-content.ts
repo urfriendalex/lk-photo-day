@@ -72,7 +72,7 @@ export const siteContent: SiteContent = {
   signup: {
     title: "Стоимость — 950 PLN",
     titleSubline: "Предоплата — 50%",
-    spotsLeftText: "Осталось 1 место",
+    spotsLeftText: "Всего 2 доп места на 25.04",
     intro: [
       "В стоимость входит съемка, макияж, стайлинг и готовая\u00A0визуальная\u00A0история\u00A0в\u00A0эстетике\u00A0Pastel\u00A0Muse.",
       "После обработки заявки мы свяжемся с вами в Instagram, отправим детали и подскажем следующий шаг.",
