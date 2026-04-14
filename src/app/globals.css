@@ -919,6 +919,36 @@ button.experience__meta--cta:focus-visible {
   z-index: 45;
 }
 
+.experience__register-cta-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  max-width: min(100vw - 2rem, 24rem);
+}
+
+/* Frost pill (mobile) wraps only the button — hint sits above, outside the pill */
+.experience__register-cta-button-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sticky-register__spots-hint {
+  display: block;
+  font-size: 0.625rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-align: center;
+  text-transform: none;
+  color: var(--color-accent);
+}
+
+.sticky-register__spots-hint.text-reveal {
+  width: 100%;
+}
+
 .sticky-register__button {
   min-width: auto;
   min-height: auto;
@@ -1377,14 +1407,10 @@ button.experience__meta--cta:focus-visible {
     isolation: isolate;
   }
 
-  /* Same 48px-tall frost control as collapsed `.landing-info-panel` (border + padding included in height). */
-  .sticky-register.experience__register-cta {
+  /* Frost only around the button; spots hint stays above the pill */
+  .experience__register-cta-button-wrap {
     box-sizing: border-box;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
     min-height: var(--landing-mobile-cta-height);
-    height: var(--landing-mobile-cta-height);
     padding: 0 clamp(0.75rem, 2.1vw, 1.125rem);
     border: 1px solid #1111111f;
     background: var(--landing-info-frost-bg);
@@ -1392,7 +1418,17 @@ button.experience__meta--cta:focus-visible {
     backdrop-filter: blur(var(--landing-info-frost-blur));
   }
 
-  .sticky-register.experience__register-cta .sticky-register__button {
+  .landing-panel__cta .experience__register-cta-stack {
+    width: 100%;
+    gap: 0.35rem;
+  }
+
+  .landing-panel__cta .sticky-register__spots-hint {
+    font-size: 0.5625rem;
+    line-height: 1.15;
+  }
+
+  .experience__register-cta-button-wrap .sticky-register__button {
     font-size: var(--landing-mobile-cta-font-size);
   }
 
