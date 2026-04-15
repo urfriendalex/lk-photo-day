@@ -27,7 +27,10 @@ export type SiteContent = {
     title: string;
     /** Shown under the price title, lighter weight (e.g. prepayment terms). */
     titleSubline: string;
-    /** Urgency line above the form fields (e.g. spots left). */
+    /**
+     * Optional urgency line: landing CTA hint + signup actions row. Implementation stays in
+     * `pastel-muse-experience` / `booking-form`; leave `""` to hide, or set non-empty copy to show.
+     */
     spotsLeftText: string;
     intro: string[];
     fields: {
@@ -72,7 +75,7 @@ export const siteContent: SiteContent = {
   signup: {
     title: "Стоимость — 950 PLN",
     titleSubline: "Предоплата — 50%",
-    spotsLeftText: "Всего 2 доп места на 25.04",
+    spotsLeftText: "",
     intro: [
       "В стоимость входит съемка, макияж, стайлинг и готовая\u00A0визуальная\u00A0история\u00A0в\u00A0эстетике\u00A0Pastel\u00A0Muse.",
       "После обработки заявки мы свяжемся с вами в Instagram, отправим детали и подскажем следующий шаг.",

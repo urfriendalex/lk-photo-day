@@ -1153,7 +1153,7 @@ export function PastelMuseExperience({
 
         <div className="landing-panel__cta sticky-register experience__register-cta">
           <div className="experience__register-cta-stack">
-            {activeMode !== "signup" ? (
+            {activeMode !== "signup" && content.signup.spotsLeftText.trim() ? (
               <TextReveal
                 playOnce
                 as="span"

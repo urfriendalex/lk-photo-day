@@ -32,8 +32,11 @@ export async function sendBookingEmail(payload: BookingPayload) {
   const { Resend } = await import("resend");
   const resend = new Resend(resendApiKey);
 
-  return resend.emails.send({
-    from: "Photo Day <onboarding@alkouka.resend.app>",
+  const from =
+    process.env.BOOKING_EMAIL_FROM?.trim() || "Pastel Muse <bookings@lizakarasiova.com>";
+
+  const result = await resend.emails.send({
+    from,
     to: [bookingEmailTo],
     subject: `New Pastel Muse contact: ${payload.name}`,
     text: [
@@ -44,6 +47,14 @@ export async function sendBookingEmail(payload: BookingPayload) {
       `Instagram: ${payload.instagram}`,
     ].join("\n"),
   });
+
+  if (result.error) {
+    const detail =
+      typeof result.error.message === "string" ? result.error.message : "Resend API error";
+    console.error("[booking] Resend email failed:", detail);
+  }
+
+  return result;
 }
 
 export async function sendBookingTelegram(payload: BookingPayload) {
