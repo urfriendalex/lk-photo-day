@@ -539,7 +539,7 @@ button.experience__meta--cta:focus-visible {
 .landing-panel {
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: clamp(1.25rem, 2.2vw, 2rem);
+  gap: clamp(1.25rem, 2.2vw, 1.3rem);
   min-height: 0;
   height: 100%;
 }
