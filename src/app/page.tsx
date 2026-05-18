@@ -8,6 +8,7 @@ export default function Home() {
     style: getImagesFromPublicFolder("media/style"),
     photo: getImagesFromPublicFolder("media/photo"),
     makeup: getImagesFromPublicFolder("media/makeup"),
+    results: getImagesFromPublicFolder("media/results"),
   };
 
   return (

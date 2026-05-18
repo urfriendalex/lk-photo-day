@@ -1,4 +1,4 @@
-import { readdirSync } from "node:fs";
+import { existsSync, readdirSync } from "node:fs";
 import path from "node:path";
 
 const PUBLIC_DIR = path.join(process.cwd(), "public");
@@ -9,6 +9,10 @@ function toPublicUrl(folder: string, file: string) {
 
 export function getImagesFromPublicFolder(folder: string) {
   const fullDir = path.join(PUBLIC_DIR, folder);
+
+  if (!existsSync(fullDir)) {
+    return [];
+  }
 
   return readdirSync(fullDir)
     .filter((file) => /\.(avif|jpe?g|png|webp|svg)$/i.test(file))
