@@ -1387,6 +1387,10 @@ button.experience__meta--cta:focus-visible {
     gap: 0.45rem;
   }
 
+  .experience__nav-item--desktop-only {
+    display: none;
+  }
+
   .landing-panel {
     grid-template-rows: minmax(0, 1fr);
     min-height: 100%;

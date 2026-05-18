@@ -943,7 +943,9 @@ export function PastelMuseExperience({
                   return (
                     <button
                       key={topic.key}
-                      className={`experience__nav-item link-underline ${selected ? "is-active" : ""}`}
+                      className={`experience__nav-item link-underline ${
+                        topic.key === "results" ? "experience__nav-item--desktop-only" : ""
+                      } ${selected ? "is-active" : ""}`}
                       type="button"
                       onClick={() => {
                         applyMode(activeMode === topic.key ? "landing" : topic.key, {
