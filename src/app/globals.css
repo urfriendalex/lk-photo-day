@@ -430,6 +430,12 @@ input {
   flex-wrap: nowrap;
   gap: clamp(0.7rem, 1.8vw, 1.75rem);
   min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.experience__nav::-webkit-scrollbar {
+  display: none;
 }
 
 .experience__nav-item {
@@ -1283,13 +1289,15 @@ button.experience__meta--cta:focus-visible {
   }
 }
 
-.booking-success {
+.booking-success,
+.booking-closed {
   display: grid;
   gap: 0.4rem;
   width: min(100%, 42rem);
 }
 
-.booking-success h3 {
+.booking-success h3,
+.booking-closed h3 {
   margin: 0;
   font-family: inherit;
   font-size: 0.75rem;
@@ -1298,7 +1306,8 @@ button.experience__meta--cta:focus-visible {
   letter-spacing: 0.01em;
 }
 
-.booking-success p {
+.booking-success p,
+.booking-closed p {
   margin: 0;
   color: var(--color-ink-soft);
   font-family: inherit;
@@ -1307,6 +1316,20 @@ button.experience__meta--cta:focus-visible {
   letter-spacing: 0.01em;
   line-height: 1.5;
   text-transform: none;
+}
+
+.booking-closed__link {
+  position: relative;
+  justify-self: start;
+  margin-top: 0.55rem;
+  color: var(--color-accent);
+  font-family: inherit;
+  font-size: 0.75rem;
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  text-transform: uppercase;
 }
 
 /* Footer details FAB: styles only apply ≤720px; hide on larger viewports so unstyled DOM does not leak. */
@@ -1362,6 +1385,10 @@ button.experience__meta--cta:focus-visible {
   .experience__nav,
   .experience__meta {
     gap: 0.45rem;
+  }
+
+  .experience__nav-item--desktop-only {
+    display: none;
   }
 
   .landing-panel {

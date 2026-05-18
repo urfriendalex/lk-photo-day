@@ -105,24 +105,29 @@ export function PastelMuseExperience({
     c += estimateLineCount(content.date);
     const priceDelay = revealAfterLines(c);
     return { locationDelay, dateDelay, priceDelay };
-  }, [content.location, content.date, content.priceLabel]);
+  }, [content.location, content.date]);
 
   const landingFooterReveal = useMemo(() => {
-    let c = 0;
-    const intro = content.introText.map((paragraph) => {
-      const blockDelay = revealAfterLines(c);
-      c += estimateLineCount(paragraph);
-      return { paragraph, blockDelay };
-    });
-    const registerDelay = revealAfterLines(c);
-    c += estimateLineCount(content.registerLabel);
+    const introData = content.introText.reduce<{
+      intro: { paragraph: string; blockDelay: number }[];
+      lineCount: number;
+    }>(
+      (acc, paragraph) => ({
+        intro: [...acc.intro, { paragraph, blockDelay: revealAfterLines(acc.lineCount) }],
+        lineCount: acc.lineCount + estimateLineCount(paragraph),
+      }),
+      { intro: [], lineCount: 0 },
+    );
+    let c = introData.lineCount;
+    const registerDelay = revealAfterLines(introData.lineCount);
+    c += estimateLineCount(content.resultsCtaLabel);
     const info: { line: string; blockDelay: number }[] = [];
     for (const line of content.infoLines) {
       info.push({ line, blockDelay: revealAfterLines(c) });
       c += estimateLineCount(line);
     }
-    return { intro, registerDelay, info };
-  }, [content.introText, content.registerLabel, content.infoLines]);
+    return { intro: introData.intro, registerDelay, info };
+  }, [content.introText, content.resultsCtaLabel, content.infoLines]);
 
   const signupViewReveal = useMemo(() => {
     const introParagraph = content.signup.intro.join(" ");
@@ -150,8 +155,10 @@ export function PastelMuseExperience({
       c += estimateLineCount(paragraph);
       return { paragraph, blockDelay };
     });
-    const ctaDelay = revealAfterLines(c);
-    c += estimateLineCount(activeContent.ctaLabel);
+    const ctaDelay = activeContent.ctaLabel ? revealAfterLines(c) : 0;
+    if (activeContent.ctaLabel) {
+      c += estimateLineCount(activeContent.ctaLabel);
+    }
     const gridFirstLineIndex = c;
     const stickyLineIndex = gridFirstLineIndex + GRID_REVEAL_TAIL_LINE_SLOTS;
     return {
@@ -165,19 +172,27 @@ export function PastelMuseExperience({
 
   const landingInfoOverlayReveal = useMemo(() => {
     const lag = LANDING_INFO_PANEL_TEXT_REVEAL_LAG_S;
-    let c = 0;
-    const introParagraphs = content.introText.map((paragraph) => {
-      const blockDelay = lag + revealAfterLines(c);
-      c += estimateLineCount(paragraph);
-      return { paragraph, blockDelay };
-    });
+    const introData = content.introText.reduce<{
+      introParagraphs: { paragraph: string; blockDelay: number }[];
+      lineCount: number;
+    }>(
+      (acc, paragraph) => ({
+        introParagraphs: [
+          ...acc.introParagraphs,
+          { paragraph, blockDelay: lag + revealAfterLines(acc.lineCount) },
+        ],
+        lineCount: acc.lineCount + estimateLineCount(paragraph),
+      }),
+      { introParagraphs: [], lineCount: 0 },
+    );
+    let c = introData.lineCount;
     const info: { line: string; blockDelay: number }[] = [];
     for (const line of content.infoLines) {
       const blockDelay = lag + revealAfterLines(c);
       info.push({ line, blockDelay });
       c += estimateLineCount(line);
     }
-    return { introParagraphs, info };
+    return { introParagraphs: introData.introParagraphs, info };
   }, [content.introText, content.infoLines]);
 
   const marqueeTrack = useMemo(() => {
@@ -254,7 +269,7 @@ export function PastelMuseExperience({
 
   const handleHeaderMetaCtaClick = useCallback(() => {
     if (activeMode === "signup") {
-      document.getElementById("name")?.focus();
+      document.getElementById("next-photo-day-link")?.focus();
       return;
     }
     toggleRegisterMode();
@@ -928,7 +943,9 @@ export function PastelMuseExperience({
                   return (
                     <button
                       key={topic.key}
-                      className={`experience__nav-item link-underline ${selected ? "is-active" : ""}`}
+                      className={`experience__nav-item link-underline ${
+                        topic.key === "results" ? "experience__nav-item--desktop-only" : ""
+                      } ${selected ? "is-active" : ""}`}
                       type="button"
                       onClick={() => {
                         applyMode(activeMode === topic.key ? "landing" : topic.key, {
@@ -1022,14 +1039,18 @@ export function PastelMuseExperience({
                       text={activeContent.person}
                       blockDelay={topicReveal.personDelay}
                       renderLine={(line) => (
-                        <a
-                          href={activeContent.personUrl}
-                          target="_blank"
-                          rel="noreferrer noopener"
-                          className="topic-detail__heading-link interactive interactive--accent"
-                        >
-                          {line}
-                        </a>
+                        activeContent.personUrl ? (
+                          <a
+                            href={activeContent.personUrl}
+                            target="_blank"
+                            rel="noreferrer noopener"
+                            className="topic-detail__heading-link interactive interactive--accent"
+                          >
+                            {line}
+                          </a>
+                        ) : (
+                          line
+                        )
                       )}
                     />
                   </div>
@@ -1040,18 +1061,20 @@ export function PastelMuseExperience({
                     ))}
                   </div>
 
-                  <a
-                    className="topic-detail__link interactive interactive--accent"
-                    href={activeContent.ctaUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    <TextReveal
-                      as="span"
-                      text={activeContent.ctaLabel}
-                      blockDelay={topicReveal.ctaDelay}
-                    />
-                  </a>
+                  {activeContent.ctaLabel && activeContent.ctaUrl ? (
+                    <a
+                      className="topic-detail__link interactive interactive--accent"
+                      href={activeContent.ctaUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      <TextReveal
+                        as="span"
+                        text={activeContent.ctaLabel}
+                        blockDelay={topicReveal.ctaDelay}
+                      />
+                    </a>
+                  ) : null}
                 </div>
 
                 <SectionGridImages
@@ -1171,7 +1194,7 @@ export function PastelMuseExperience({
                 onClick={
                   activeMode === "signup"
                     ? () => applyMode(modeBeforeSignupRef.current, { updateUrl: true })
-                    : toggleRegisterMode
+                    : () => applyMode("results", { updateUrl: true })
                 }
               >
                 {/* Keep register TextReveal mounted; hide on signup so Back does not replay the reveal or resize the label */}
@@ -1186,7 +1209,7 @@ export function PastelMuseExperience({
                   <TextReveal
                     playOnce
                     as="span"
-                    text={content.registerLabel}
+                    text={content.resultsCtaLabel}
                     blockDelay={registerCtaRevealDelay}
                   />
                 </span>

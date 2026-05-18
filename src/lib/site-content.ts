@@ -1,13 +1,13 @@
-export type TopicKey = "style" | "photo" | "makeup";
+export type TopicKey = "style" | "photo" | "makeup" | "results";
 
 export type TopicContent = {
   key: TopicKey;
   label: string;
   person: string;
-  personUrl: string;
+  personUrl?: string;
   description: string[];
-  ctaLabel: string;
-  ctaUrl: string;
+  ctaLabel?: string;
+  ctaUrl?: string;
 };
 
 export type SiteContent = {
@@ -21,6 +21,7 @@ export type SiteContent = {
   /** Short price for the header meta strip (keep in sync with signup pricing). */
   priceLabel: string;
   registerLabel: string;
+  resultsCtaLabel: string;
   introText: string[];
   infoLines: string[];
   signup: {
@@ -43,6 +44,10 @@ export type SiteContent = {
     };
     button: string;
     helperText: string;
+    closedTitle: string;
+    closedText: string;
+    nextPhotoDayLabel: string;
+    nextPhotoDayUrl: string;
   };
   topics: TopicContent[];
 };
@@ -58,6 +63,7 @@ export const siteContent: SiteContent = {
   date: "26.04.2026",
   priceLabel: "950 PLN",
   registerLabel: "ЗАРЕГИСТРИРОВАТЬСЯ",
+  resultsCtaLabel: "VIEW RESULTS",
   introText: [
     "26 апреля, STUDIO ISKRA, Czechowicka 4, 04-218 Warszawa.",
     "Фотодень в пастельной эстетике про цвет, настроение и тебя. Нежные оттенки, весенний свет и образы, в которых ты чувствуешь себя по\u2011настоящему красивой.",
@@ -90,6 +96,11 @@ export const siteContent: SiteContent = {
     },
     button: "ОСТАВИТЬ ЗАЯВКУ",
     helperText: "После заявки мы свяжемся с вами в Instagram.",
+    closedTitle: "Регистрация на этот фотодень закрыта",
+    closedText:
+      "Этот фотодень уже состоялся. Сейчас можно посмотреть результаты Pastel Muse и записаться на новый фотодень.",
+    nextPhotoDayLabel: "ЗАПИСАТЬСЯ НА НОВЫЙ ФОТОДЕНЬ",
+    nextPhotoDayUrl: "https://example.com/",
   },
   topics: [
     {
@@ -131,6 +142,12 @@ export const siteContent: SiteContent = {
       ],
       ctaLabel: "view makeup artist",
       ctaUrl: "https://www.instagram.com/takonik.visage/",
+    },
+    {
+      key: "results",
+      label: "RESULTS",
+      person: "PASTEL MUSES",
+      description: [],
     },
   ],
 };
