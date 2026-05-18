@@ -316,6 +316,22 @@ export function PastelMuseExperience({
 
   const headerMetaCursorLabel =
     activeMode === "signup" ? "заполните форму" : content.registerLabel;
+  const primaryCtaLabel =
+    activeMode === "results" ? content.newPhotoDayCtaLabel : content.resultsCtaLabel;
+
+  const handlePrimaryCtaClick = useCallback(() => {
+    if (activeMode === "signup") {
+      applyMode(modeBeforeSignupRef.current, { updateUrl: true });
+      return;
+    }
+
+    if (activeMode === "results") {
+      window.location.href = content.signup.nextPhotoDayUrl;
+      return;
+    }
+
+    applyMode("results", { updateUrl: true });
+  }, [activeMode, applyMode, content.signup.nextPhotoDayUrl]);
 
   const handlePreloaderSnapComplete = useCallback(() => {
     setIntroState("reveal");
@@ -1191,11 +1207,7 @@ export function PastelMuseExperience({
                   activeMode === "signup" ? "" : " interactive--accent"
                 }`}
                 type="button"
-                onClick={
-                  activeMode === "signup"
-                    ? () => applyMode(modeBeforeSignupRef.current, { updateUrl: true })
-                    : () => applyMode("results", { updateUrl: true })
-                }
+                onClick={handlePrimaryCtaClick}
               >
                 {/* Keep register TextReveal mounted; hide on signup so Back does not replay the reveal or resize the label */}
                 <span
@@ -1209,7 +1221,7 @@ export function PastelMuseExperience({
                   <TextReveal
                     playOnce
                     as="span"
-                    text={content.resultsCtaLabel}
+                    text={primaryCtaLabel}
                     blockDelay={registerCtaRevealDelay}
                   />
                 </span>
