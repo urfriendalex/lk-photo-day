@@ -22,6 +22,7 @@ export type SiteContent = {
   priceLabel: string;
   registerLabel: string;
   resultsCtaLabel: string;
+  newPhotoDayCtaLabel: string;
   introText: string[];
   infoLines: string[];
   signup: {
@@ -64,6 +65,7 @@ export const siteContent: SiteContent = {
   priceLabel: "950 PLN",
   registerLabel: "ЗАРЕГИСТРИРОВАТЬСЯ",
   resultsCtaLabel: "VIEW RESULTS",
+  newPhotoDayCtaLabel: "SIGN UP FOR A NEW ONE",
   introText: [
     "26 апреля, STUDIO ISKRA, Czechowicka 4, 04-218 Warszawa.",
     "Фотодень в пастельной эстетике про цвет, настроение и тебя. Нежные оттенки, весенний свет и образы, в которых ты чувствуешь себя по\u2011настоящему красивой.",
@@ -100,7 +102,7 @@ export const siteContent: SiteContent = {
     closedText:
       "Этот фотодень уже состоялся. Сейчас можно посмотреть результаты Pastel Muse и записаться на новый фотодень.",
     nextPhotoDayLabel: "ЗАПИСАТЬСЯ НА НОВЫЙ ФОТОДЕНЬ",
-    nextPhotoDayUrl: "https://example.com/",
+    nextPhotoDayUrl: "https://bloomingdiva.lizakarasiova.com/",
   },
   topics: [
     {
