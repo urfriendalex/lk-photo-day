@@ -979,6 +979,9 @@ button.experience__meta--cta:focus-visible {
 
 .experience__register-cta-layer {
   display: block;
+  /* Single-line button label: avoids the longer label ("SIGN UP FOR A NEW ONE")
+     wrapping when measured against the width of the shorter previous label. */
+  white-space: nowrap;
 }
 
 .experience__register-cta-layer--concealed {
