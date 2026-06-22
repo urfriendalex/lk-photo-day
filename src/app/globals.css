@@ -979,8 +979,16 @@ button.experience__meta--cta:focus-visible {
 
 .experience__register-cta-layer {
   display: block;
-  /* Single-line button label: avoids the longer label ("SIGN UP FOR A NEW ONE")
-     wrapping when measured against the width of the shorter previous label. */
+}
+
+/*
+  Force the CTA reveal onto a single line. `.text-reveal` sets `white-space: pre-line`,
+  which makes the visual-line measurer wrap the label against the button's current width.
+  On a state change the button is still sized to the shorter previous label, so the longer
+  label ("SIGN UP FOR A NEW ONE") collapses into a stuck narrow column. `nowrap` here makes
+  the measurer short-circuit to one line, so the label never wraps regardless of width.
+*/
+.experience__register-cta-layer .text-reveal {
   white-space: nowrap;
 }
 
